@@ -669,31 +669,13 @@
 
 #_ (* Processes a javadoc tree, extracting index information as it goes. @name can
       operate in a single-threaded mode (useful for debugging), or multithreaded.
-      @arg name A (short) name for the source tree\; used as the name for the 
-      source object.
-      
-      @arg description A longer name or short description for the tree.
-      @arg base-uri URI string that locates the Javadoc tree from which @name will
-      extract index information.
-      @arg service-uri URI string for the location of the tree to be used
-      when servicing requests for the tree's document content. Note that in practice
-      this may be a URI that's remapped by server software as needed.
-      @option :threads If zero, operates in single-threaded mode. If nonzero,
-      determines the number of extraction threads to run concurrently. Default value is 0.
-      @option :members If true, extracts member information and constructs per-type 
-      member indexes. Defaults to true. (Not currently implemented!!!)
-      @option :vm If true, outputs a message describing each member encountered.
-      Defaults to false.
-      @option :vt If true, outputs a message describing each type 
-      (class, interface, enum, annotation) encountered. Defaults to false.
-      @option :vp If true, outputs a message describing each package encountered.
-      Defaults to true.
+      @p Arguments are as in @(l javadoc-extract).
       @returns A @(link JavadocJob) object describing the extraction job, and containing
       its results.
      )
-(defnk javadoc-process [name description version base-uri service-uri 
+(defnk javadoc-process [name description version base-uri remote-uri 
                         :threads 0 :members true :vm false :vt false :vp false ]
-  (let [source (zap (new-JavadocSource name description version service-uri))
+  (let [source (zap (new-JavadocSource name description version remote-uri name))
         job (make-JavadocJob 
               base-uri source 
               (if (= threads 0) 1 threads) members
@@ -718,14 +700,49 @@
     (message-flush )
     job))  ; must be last!!!
 
-
+#_ (* Extracts a javadoc tree, extracting index information as it goes, and
+      deposits the results in a JSON-formatted file. 
+      @p The output @name generates contains two top-level (root) indexes\: one 
+      is an index of all of the types in the tree, and the other, an index 
+      of all of the packages.
+      @p @name can operate in a single-threaded mode (useful for debugging), 
+      or multithreaded.
+      
+      @arg dest The name of the output file.
+      @arg name A (short) name for the source tree\; used as the name for the 
+      source object.
+      @arg description A longer name or short description for the tree.
+      @arg version A string notionally containing a version number of the source
+      tree. 
+      @arg pkg-terms A collection of term strings used for vocally specifying 
+      the package index.
+      @arg type-terms A collection of term strings used to vocally specify the 
+      type index.
+      @arg base-uri URI string that locates the Javadoc tree from which @name will
+      extract index information.
+      @arg remote-uri URI string for the location of the tree to be used
+      when servicing requests for the tree's document content. This may be nil if the
+      tree content will always be served locally.
+      @option :threads If zero, operates in single-threaded mode. If nonzero,
+      determines the number of extraction threads to run concurrently. Default value is 0.
+      @option :members If true, extracts member information and constructs per-type 
+      member indexes. Defaults to true. (Not currently implemented!!!)
+      @option :vm If true, outputs a message describing each member encountered.
+      Defaults to false.
+      @option :vt If true, outputs a message describing each type 
+      (class, interface, enum, annotation) encountered. Defaults to false.
+      @option :vp If true, outputs a message describing each package encountered.
+      Defaults to true.
+      @returns A @(link JavadocJob) object describing the extraction job, and containing
+      its results.
+     )
 (defn javadoc-extract [dest name description version 
-                        pkg-terms type-terms base-uri service-uri 
+                        pkg-terms type-terms base-uri remote-uri 
                         { :keys [threads members vm vt vp] } ]
   (let [out-stream (PrintStream. (File. dest))] 
     (binding [output-fn (fn [_ stuff] (.println out-stream stuff))
               externalizer (make-JSONExternalizer)]
-      (let [job (javadoc-process name description version base-uri service-uri 
+      (let [job (javadoc-process name description version base-uri remote-uri  
                                  :threads threads :members members :vm vm :vt vt :vp vp)]
         (zap (new-JavadocRoot 
                (package-index-id-of job) (str name "-packages")
@@ -742,9 +759,9 @@
         (.close out-stream)))))
 
 (defnk jdx [dest name description version 
-                        pkg-terms type-terms base-uri service-uri 
+                        pkg-terms type-terms base-uri remote-uri   
                         :threads 0 :members true :vm false :vt false :vp true]
-  (javadoc-extract dest name description version pkg-terms type-terms base-uri service-uri
+  (javadoc-extract dest name description version pkg-terms type-terms base-uri remote-uri 
                    { :threads threads :members members :vm vm :vt vt :vp vp}))
 
 #_(defn -main [& args]

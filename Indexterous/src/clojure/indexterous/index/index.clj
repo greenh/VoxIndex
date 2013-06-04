@@ -90,6 +90,10 @@
   (description-of [this] description)
   )
 
+(defextenso LocallyIdentified  [] [local-id]
+  (local-identity-of [this] local-id)
+  )
+
 #_ (* Specifies that an entity is "consultable", meaning that it can be accessed 
       electronically at some specified URI.)
 (defprotocol Consultable
@@ -114,9 +118,14 @@
   )
 
 #_ (* Refined specification for @(link Source sources) that are "consultable" in the 
-      sense that they are online-accessible at some URI. 
+      sense that they are online-accessible at some URI.
+      @field service-uri A globally accessible URI for the source.
+      @filed local-id An id that can be mapped into a locally-served version of the 
+      source.
       )
-(defextenso ConsultableSource [(Source name description version)] [service-uri]
+(defextenso ConsultableSource  
+  [(Source name description version) (LocallyIdentified local-id)] 
+  [service-uri]
   Consultable 
   (service-uri-of [this] service-uri)
   )

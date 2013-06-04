@@ -29,7 +29,7 @@
 #_ (* A @(link Source) for generic documents. 
       )
 (defexin DocumentSource type-uri
-  [(ConsultableSource name description version service-uri)] [] 
+  [(ConsultableSource name description version local-id service-uri)] [] 
 
   java.lang.Object 
   (toString [this] (str "#<DocumentSource " name ">" ))
