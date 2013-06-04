@@ -96,9 +96,6 @@
     (.insert collection exts WriteConcern/SAFE)))
   
   
-  (close-db [this] (.close mongo))
-  
-  
   
   #_ (* Returns a MongoDB cursor descibing the results of performing the specified
         query on the the indicated collection. 
