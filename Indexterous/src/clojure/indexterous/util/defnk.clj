@@ -34,5 +34,5 @@
          ~@body) 
        (defmacro 
          ~name [& args#] 
-         (expand-keyword-call '~name '~pos '~kwvals args#)) 
+         (expand-keyword-call '~name '[~@pos] '~kwvals args#)) 
        (.setMeta #'~name (assoc (meta #'~name) :arglists '(~args) ))))) 
