@@ -1,4 +1,4 @@
-#_ ( Copyright (c) 2013 Howard Green. All rights reserved.
+#_ ( Copyright (c) 2013 - 2014 Howard Green. All rights reserved.
                 
      The use and distribution terms for this software are covered by the
      Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
@@ -90,7 +90,12 @@
   (description-of [this] description)
   )
 
-(defextenso LocallyIdentified  [] [local-id]
+#_ (* Allows an entity to have an identifier that's subject to site-specific 
+      interpretation.
+      @p This gets used, e.g., by voxindex to identify sources that are served 
+      "locally", the URLs of which are generated at the time of service.
+      )
+(defextenso ^:deprecated LocallyIdentified  [] [local-id]
   (local-identity-of [this] local-id)
   )
 
@@ -119,13 +124,19 @@
 
 #_ (* Refined specification for @(link Source sources) that are "consultable" in the 
       sense that they are online-accessible at some URI.
-      @field service-uri A globally accessible URI for the source.
+      @field service-uri A URI for the source. By convention, this is a URL for
+      globally accessible sources, or a URN for locally served sources.
       @filed local-id An id that can be mapped into a locally-served version of the 
       source.
       )
 (defextenso ConsultableSource  
   [(Source name description version) (LocallyIdentified local-id)] 
   [service-uri]
+  #_ (* Returns true if the source is locally served from an exogeneously specified
+        location. Instead of a URL, the source is spec'ed as having a URN that's
+        used as a locally mapped key by the server.
+        )
+  (locally-served? [this] (boolean (re-matches #"urn:.*" service-uri)))
   Consultable 
   (service-uri-of [this] service-uri)
   )
@@ -156,7 +167,7 @@
 
 #_ (* An extenso for specifying indexables that have a @(link ConsultableSource).
       @p @(b Note that, despite its name, the URI contained in @(field relative-uri) 
-          @(u MAY) be relative to that of the source but is @(u NOT) required 
+          :br @(u MAY) be relative to that of the source but is @(u NOT) required 
           to be so!) If the full URI (e.g., a URI starting with, e.g., "http://")  
       )
 (defextenso ConsultablySourced [(Sourced source-ref)] [relative-uri]
@@ -165,6 +176,7 @@
     (if (re-matches #"[\w+-.]+:.*" relative-uri)
       relative-uri   ; ... but it's not "relative" 
       (str (service-uri-of source) "/" relative-uri )))
+  
   )
 
 (defextenso LocatablySourced [(Sourced source-ref)] [relative-location]
