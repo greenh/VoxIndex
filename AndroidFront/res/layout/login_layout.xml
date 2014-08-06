@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical">
+
+  <TableLayout android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+      <TableRow android:id="@+id/tableRow2" android:layout_width="wrap_content" android:layout_height="wrap_content">
+          <TextView android:id="@+id/textserverid" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="8sp" android:layout_marginRight="8sp" android:text="@string/serverName" android:textAppearance="?android:attr/textAppearanceMedium"/>
+          <EditText android:id="@+id/loginServerURI" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1" android:ems="20" android:inputType="textUri|textNoSuggestions"/>
+      </TableRow>
+      <TableRow android:id="@+id/tableRow3" android:layout_width="wrap_content" android:layout_height="wrap_content">
+          <TextView android:id="@+id/textuserid" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="8sp" android:layout_marginRight="8sp" android:text="@string/user_name" android:textAppearance="?android:attr/textAppearanceMedium"/>
+          <EditText android:id="@+id/loginUserID" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1" android:ems="10" android:inputType="text|textNoSuggestions"/>
+      </TableRow>
+      <TableRow android:id="@+id/tableRow4" android:layout_width="wrap_content" android:layout_height="wrap_content">
+          <TextView android:id="@+id/textView2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="8sp" android:layout_marginRight="8sp" android:text="@string/password" android:textAppearance="?android:attr/textAppearanceMedium"/>
+          <EditText android:id="@+id/loginPassword" android:layout_width="match_parent" android:layout_height="wrap_content" android:ems="10" android:inputType="textPassword|textNoSuggestions"/>
+      </TableRow>
+      <TableRow android:id="@+id/tableRow5" android:layout_width="match_parent" android:layout_height="wrap_content">
+          <TextView android:id="@+id/tabSeqLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="8sp" android:layout_marginRight="8sp" android:text="@string/remember" android:textAppearance="?android:attr/textAppearanceMedium"/>
+          <CheckBox android:id="@+id/loginRemember" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
+      </TableRow>
+      <TableRow android:id="@+id/tableRow1" android:layout_width="wrap_content" android:layout_height="wrap_content">
+          <TextView android:id="@+id/textnulll" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="8sp" android:layout_marginRight="8sp" android:textAppearance="?android:attr/textAppearanceMedium"/>
+          <TextView android:id="@+id/loginMessage" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1" android:ems="10" android:paddingBottom="@dimen/loginmsgspace" android:paddingTop="@dimen/loginmsgspace" android:textAppearance="?android:attr/textAppearanceMedium"/>
+      </TableRow>
+  </TableLayout>
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="right" >
+      <Button android:id="@+id/loginButton" android:layout_width="120sp" android:layout_height="wrap_content" android:text="@string/login" android:layout_gravity="right"/>
+  </LinearLayout>
+
+ 
+
+
+</LinearLayout>

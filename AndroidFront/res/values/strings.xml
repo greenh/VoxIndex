@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="hello">Hello World, Audiology!</string>
+  <string name="app_name">VoxIndex</string>
+  <string name="start">Start</string>
+  <string name="stop">Stop</string>
+  <string name="green">#ff00ff00</string>
+  <string name="Test">Try it!</string>
+  <string name="saveFile">Save</string>
+  <string name="test">Test</string>
+  <string name="saveOff">Save Off</string>
+  <string name="saveOn">Save On</string>
+  <string name="logView">Log</string>
+  <string name="view">View</string>
+  <string name="hexOff">Hex Off</string>
+  <string name="hexOn">Hex On</string>
+  <string name="serverName">Server URI</string>
+  <string name="tabLog">Log</string>
+  <string name="tabGrammar">Grammar</string>
+  <string name="tabContent">Content</string>
+  <string name="serverURIDialogTitle">Server URL</string>
+  <string name="serverURIMessage">Enter the server\'s address: </string>
+  <string name="errInvalidURI">Server URI is not valid</string><string name="javaScript">JavaScript</string>
+  <string name="noURI">Server URL is not set</string>
+  
+  <string name="cancel">Cancel</string>
+  <string name="saveSpeech">Save Speech</string>
+  <string name="dumpVoice">Dump voice in log</string>
+  <string name="newTab">New Tab</string>
+  <string name="forward">Fwd</string>
+  <string name="backward">Back</string>
+  <string name="nextVariant">Next</string>
+  <string name="prevVariant">Prev</string>
+  <string name="closeTab">Close Tab</string>
+  <string name="logStart">~~~~~ Activity Log ~~~~~</string>
+  <string name="logText">Log</string>
+  <string name="exit">Exit</string>
+  <string name="recognitionThreshold">Recognition threshold</string>
+  <string name="recognitionThresholdDialogName">Recognition threshold</string>
+  <string name="recognitionThresholdDialogMessage">Enter recognition threshold (0-100)</string>
+  <string name="recognitionThresholdInvalid">Recognition threshold must be an integer between 0 and 100
+  </string>
+  <string name="belowThresholdRecognitionMessage">Is this what you said?</string>
+  <string name="yes">Yes</string>
+  <string name="no">No</string>
+  <string name="belowThresholdDialogTitle">Low confidence result</string>
+  <string name="goop">This is a Text</string>
+  <string name="silenceThresholdInvalid">Silence threshold must be an integer between 0 and 100
+  </string>
+  <string name="silenceThresholdDialogName">Silence threshold</string>
+  <string name="silenceThresholdDialogMessage">Enter silence threshold (0-32000)</string>
+  <string name="requestException">Exception on request</string>
+  <string name="silenceThresholdItem">Silence threshold</string>
+  <string name="testCommunications">Test communication</string>
+  <string name="testDialogName">Test server communications</string>
+  <string name="testDialogMessage">Enter an integer</string>
+  <string name="indexView">Index</string>
+  <string name="ok">OK</string>
+  <string name="textSize">Text Size</string>
+  <string name="tinyTextSize">Tiny</string>
+  <string name="smallTextSize">Small</string>
+  <string name="normalTextSize">Normal</string>
+  <string name="largeTextSize">Large</string>
+  <string name="hugeTextSize">Huge</string>
+  <string name="textSizeDialogName">Text Size</string>
+  <string name="updateText">Update</string>
+  <string name="user_name">User name</string>
+  <string name="password">Password</string>
+  <string name="save_password">Save password</string>
+  <string name="loginDialogName">Login</string>
+  <string name="login">Login</string>
+  <string name="remember">Remember?</string>
+  <string name="errUserNameEmpty">User name is empty</string>
+  <string name="logout">Logout</string>
+  <string name="loggingIn">Logging in...</string>
+  <string name="reset">Reset</string>
+  
+  
+</resources>

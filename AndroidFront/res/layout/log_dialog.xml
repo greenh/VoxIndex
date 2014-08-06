@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/logDialog" android:layout_width="800sp" android:layout_height="600sp">
+  <ScrollView 
+    android:layout_height="fill_parent" android:layout_width="match_parent"
+    android:id="@+id/textScroller">
+    <LinearLayout android:layout_height="fill_parent"
+      android:layout_width="fill_parent" android:id="@+id/linearLayout2">
+      <TextView android:layout_height="wrap_content" android:layout_width="fill_parent"
+        android:typeface="monospace" android:id="@+id/textView" android:text="@string/logStart"></TextView>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

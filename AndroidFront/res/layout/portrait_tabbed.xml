@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/startButton"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/start" >
+        </Button>
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/stop" >
+        </Button>
+
+        <ImageView
+            android:id="@+id/statusImage"
+            android:layout_width="40sp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="12dip"
+            android:layout_marginTop="12dip"
+            android:src="@drawable/white_dot" >
+        </ImageView>
+
+        <ImageView
+            android:id="@+id/resultImage"
+            android:layout_width="40sp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="12dip"
+            android:layout_marginTop="12dip"
+            android:src="@drawable/check_green" >
+        </ImageView>
+
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/backward" >
+        </Button>
+
+        <Button
+            android:id="@+id/forwardButton"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/forward" >
+        </Button>
+
+        <Button
+            android:id="@+id/prevVariant"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/prevVariant" >
+        </Button>
+
+        <Button
+            android:id="@+id/nextVariant"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/nextVariant" >
+        </Button>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical" >
+
+        <TabHost
+            android:id="@+id/tabHost"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <LinearLayout
+                android:id="@+id/linearLayoutX"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" >
+
+                <TabWidget
+                    android:id="@android:id/tabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+                </TabWidget>
+
+                <FrameLayout
+                    android:id="@android:id/tabcontent"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+                </FrameLayout>
+            </LinearLayout>
+        </TabHost>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/newTab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/newTab" >
+        </Button>
+
+        <Button
+            android:id="@+id/closeTab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/closeTab" >
+        </Button>
+
+        <LinearLayout
+            android:id="@+id/linearLayout22"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1" >
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/updateButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/updateText" >
+        </Button>
+
+        <Button
+            android:id="@+id/logButton"
+            android:layout_width="80sp"
+            android:layout_height="wrap_content"
+            android:text="@string/logText" >
+        </Button>
+    </LinearLayout>
+
+</LinearLayout>

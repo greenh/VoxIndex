@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="DefaultLocale">
+        <ignore path="src/voxindex/audiology/RemoteCommand.java" />
+    </issue>
+    <issue id="UseSparseArrays" severity="ignore" />
+</lint>
