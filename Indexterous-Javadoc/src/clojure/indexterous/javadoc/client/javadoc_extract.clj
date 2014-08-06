@@ -675,7 +675,7 @@
      )
 (defnk javadoc-process [name description version base-uri remote-uri 
                         :threads 0 :members true :vm false :vt false :vp false ]
-  (let [source (zap (new-JavadocSource name description version remote-uri name))
+  (let [source (zap (new-JavadocSource name description version name remote-uri))
         job (make-JavadocJob 
               base-uri source 
               (if (= threads 0) 1 threads) members
@@ -743,18 +743,22 @@
     (binding [output-fn (fn [_ stuff] (.println out-stream stuff))
               externalizer (make-JSONExternalizer)]
       (let [job (javadoc-process name description version base-uri remote-uri  
-                                 :threads threads :members members :vm vm :vt vt :vp vp)]
-        (zap (new-JavadocRoot 
+                                 :threads threads :members members :vm vm :vt vt :vp vp)
+            package-root 
+            (new-JavadocRoot 
                (package-index-id-of job) (str name "-packages")
-               (source-id-of job) (str description " packages")))
+               (source-id-of job) (str description " packages"))
+            type-root 
+            (new-JavadocRoot 
+               (type-index-id-of job) name (source-id-of job) description)]
+        (zap package-root)
         (zap (new-RootEntry
                (Oid/oid) (str name "-packages") (str description " packages") 
-               (source-id-of job) version (package-index-id-of job) pkg-terms))
-        (zap (new-JavadocRoot 
-               (type-index-id-of job) name (source-id-of job) description))
+               (source-id-of job) version (id-of package-root) pkg-terms))
+        (zap type-root)
         (zap (new-RootEntry
                (Oid/oid) name description (source-id-of job) version 
-               (type-index-id-of job) type-terms))
+               (id-of type-root) type-terms))
         (output-flush)
         (.close out-stream)))))
 

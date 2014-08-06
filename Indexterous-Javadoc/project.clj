@@ -14,7 +14,7 @@
       Javadoc documentation trees, and the corresponding VoxIndex grammar support.
       )
 
-(defproject indexterous-javadoc "0.0.0-SNAPSHOT"
+(defproject voxindex/indexterous-javadoc "0.0.0-SNAPSHOT"
   :description "Javadoc support for Indexterous/VoxIndex"
   :url "https://github.com/greenh/VoxIndex"
   :license {:name "Eclipse Public License - v 1.0"
@@ -28,7 +28,7 @@
   :compile-path "classes"
   :dependencies [
     [org.clojure/clojure "1.5.1"]
-    [hiccup "1.0.3"]
+    [voxindex/indexterous "0.0.0-SNAPSHOT"] 
     [cheshire "5.1.1"] 
     [extensomatic "0.2.0"] 
     ]
@@ -37,6 +37,8 @@
     [lein-clojars "0.9.1"]
     [cjd "0.1.0"]
     ]
+  
+  :omit-source true
   
   :cjd-source "src/clojure"
   :cjd-dest "doc/dark"
