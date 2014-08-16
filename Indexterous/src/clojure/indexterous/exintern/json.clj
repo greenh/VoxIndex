@@ -159,7 +159,7 @@
 
 #_(defonce mongo (Mongo.))
 
-(def threshold 100) 
+(def v-threshold 100) 
 
 #_ (* Internalizes a JSON-formatted document and uses it to update a Mongo database.
       @arg mongo The @(il com.mongodb.Mongo) object for the Mongo server.
@@ -167,11 +167,11 @@
       @arg content A representation of the content, a Reader or File or URL or 
       file name or whatever, as allowed by @(l clojure.java.io/reader).
       )
-(defn dbload [mongo dbname content & options]
+(defn dbload [mongo dbname source & options]
   (let [db (new-DB mongo dbname)
         opts (set options)
         v (:v opts)]
-    (with-open [rdr (clojure.java.io/reader content)]
+    (with-open [rdr (clojure.java.io/reader source)]
       (loop [sources []
              indexes []
              indexables []
@@ -181,7 +181,7 @@
         (if obj
           (cond 
             (instance? indexterous.index.index.Indexable obj)
-            (if (> (count indexables) threshold)
+            (if (> (count indexables) v-threshold)
               (do 
                 (if v (do (print "x") (flush)))
                 (do-insert db (indexable-collection db) indexables)
@@ -189,7 +189,7 @@
               (recur sources indexes (conj indexables obj) roots objs))
             
             (instance? indexterous.index.index.IndexBase obj)
-            (if (> (count indexables) threshold)
+            (if (> (count indexables) v-threshold)
               (do 
                 (do-insert db (index-collection db) indexes)
                 (if v (print "i")) 
