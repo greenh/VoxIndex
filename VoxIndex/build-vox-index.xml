@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="VoxIndex" basedir="." default="vox-jar">
+
+	<property name="src.dir" value="./src" />
+	<property name="classes.dir" value="./war/WEB-INF/classes" />
+
+	<property name="vox.jar" value="vox-index.jar" />
+	<property name="module" value="voxindex.VoxIndex" />
+	<property name="module.dir" value="./war/${module}" />
+
+	<target name="vox-jar">
+		<jar destfile="${vox.jar}" index="true">
+			<fileset dir="${classes.dir}"
+			         includes="voxindex/shared/**" />
+			<fileset dir="${module.dir}" includes="*.gwt.rpc" />
+		</jar>
+
+	</target>
+
+	<!--
+	<property name="libs.dir" value="lib" />
+	<property name="clojure.jar" value="${libs.dir}/clojure-1.2.1.jar" />
+	<property name="clojure-contrib.jar"
+	          value="${libs.dir}/clojure-contrib.jar" />
+	<property name="clojure-ant.jar"
+	          value="${libs.dir}/clojure-ant-tasks.jar" />
+	-->
+
+
+</project>

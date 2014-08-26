@@ -1,0 +1,8 @@
+<module>
+	<inherits name="com.google.gwt.user.User"/>
+	<inherits name="com.google.gwt.user.theme.standard.Standard"/>
+	<entry-point class="voxindex.client.VoxIndex"/>
+    <source path='client'/>
+    <source path='shared'/>
+  
+</module>

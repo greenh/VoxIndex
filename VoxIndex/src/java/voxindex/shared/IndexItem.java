@@ -12,23 +12,28 @@ package voxindex.shared;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-/**
- * Exception thrown when an RPC request comes along that hasn't got a valid
- * session.
- */
-public class LoginRequiredException extends Exception implements IsSerializable {
-		public LoginRequiredException() { }
-
-	public LoginRequiredException(String message) {
-		super(message);
+public class IndexItem implements IsSerializable {
+	
+	public static class IndexTerm implements IsSerializable {
+		public String originalTerm;
+		public String vocalTerms[];
+		
+		public IndexTerm() { }
+		
+		public IndexTerm(String originalTerm, String[] vocalTerms) {
+			this.originalTerm = originalTerm;
+			this.vocalTerms = vocalTerms;
+		}
+		
 	}
-
-	public LoginRequiredException(Throwable cause) {
-		super(cause);
+	
+	public String indexID;
+	public IndexTerm[] indexTerms;
+	
+	public IndexItem(String indexID, IndexTerm[] indexTerms) {
+		this.indexID = indexID;
+		this.indexTerms = indexTerms;
 	}
-
-	public LoginRequiredException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
+	
+	public IndexItem() { }
 }

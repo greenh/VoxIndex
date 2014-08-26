@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="proxygen" basedir="." default="build">
+	<description>
+    Stuff for building Java-to-.Net proxy stuff for speech recognition.
+    </description>
+
+	<property environment="env" />
+	<property name="home.dir" value="${env.HOMEDRIVE}\${env.HOMEPATH}" />
+	
+	<!-- A couple of convenience properties -->
+	<property name="lib.dir" value="${home.dir}/Libraries" />
+	<property name="src.dir" value="${basedir}/src" />
+	
+	<!-- C# compiler path -->
+	<property name="csc" value="C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\csc.exe" />
+	
+	<!-- Assemblies to be used the proxy -->
+	<!--property name="mscorlib" value="C:\WINDOWS\Microsoft.NET\Framework\v2.0.50727\mscorlib.dll" /-->
+	<property name=".net.system.speech" 
+				value="C:\Program Files\Reference Assemblies\Microsoft\Framework\v3.0\System.Speech.dll"/>
+	<property name="goop.source.dll" 
+				value="${home.dir}\My Documents\Visual Studio 2012\Projects\Goop\Goop\bin\Release\Goop.dll"/>
+	<property name="mgoop.source.dll" 
+				value="${home.dir}\My Documents\Visual Studio 2012\Projects\Goop\MGoop\bin\Release\MGoop.dll"/>
+	<property name="ms.speech"
+				value="C:\Program Files\Microsoft SDKs\Speech\v11.0\Assembly\Microsoft.Speech.dll"/>
+	
+	<!-- jdi4net-related stuff -->
+	<property name="jni4net.vers" value="0.8.6.0" />
+	<property name="jni4net.dir" value="${lib.dir}/jni4net-${jni4net.vers}-bin" />
+	<property name="jni4net.lib" value="${jni4net.dir}/lib" />
+	<property name="jni4net.proxygen" value="${jni4net.dir}/bin/proxygen.exe" />
+	<property name="jni4net.jar" value="${jni4net.lib}/jni4net.j-${jni4net.vers}.jar" />
+	<property name="jni4net.dll" value="${jni4net.lib}/jni4net.n-${jni4net.vers}.dll" />
+
+
+	<!-- Name of the proxy XML file. -->
+	<property name="proxy.source" value="${basedir}\proxygen.xml" />
+
+	<basename property="proxy.name" file="${proxy.source}" suffix=".xml" />
+
+	<!-- output artifacts -->	
+	<property name="proxy.dir" value="${basedir}/${proxy.name}" />
+	<property name="proxy.dir.timestamp" value="${proxy.dir}/.ts" />
+	<!-- Note that these next two dirs need to agree with what's in the proxy.source 
+    	xml file. The proxygen program creates these  when it runs. -->
+	<property name="proxy.java.dir" value="${proxy.dir}/java" />
+	<property name="proxy.cs.dir" value="${proxy.dir}/csharp" />
+
+	<property name="proxy.classes.dir" value="${proxy.dir}/classes" />
+
+	<property name="proxy.jar" value="${proxy.name}.jar" />
+	<property name="proxy.dll" value="${proxy.name}.dll" />
+
+	<property name="goop.dll" value="Goop.dll"/>
+	<property name="mgoop.dll" value="MGoop.dll"/>
+	
+	<target name="clean">
+		<delete dir="${proxy.dir}" />
+		<delete file="${proxy.jar}" />
+		<delete file="${proxy.dll}" />
+		<delete file="${goop.dll}" />
+		<delete file="${mgoop.dll}" />
+	</target>
+
+	<target name="goop">
+		<copy tofile="${goop.dll}" file="${goop.source.dll}"/>
+		<copy tofile="${mgoop.dll}" file="${mgoop.source.dll}"/>
+	</target>
+
+	<target name="proxy-dir">
+		<mkdir dir="${proxy.dir}" />
+	</target>
+
+	<target name="proxy-check">
+		<uptodate property="proxy.uptodate" srcfile="${proxy.source}" targetfile="${proxy.dir.timestamp}" />
+	</target>
+
+	<target name="proxygen" depends="proxy-dir">
+		<delete dir="${proxy.java.dir}" />
+		<delete dir="${proxy.cs.dir}" />
+		<delete dir="${proxy.classes.dir}" />
+		<mkdir dir="${proxy.classes.dir}" />
+		<copy todir="${proxy.dir}" file="${jni4net.jar}" />
+		<copy todir="${proxy.dir}" file="${jni4net.dll}" />
+		<exec executable="${jni4net.proxygen}" dir="${proxy.dir}" failonerror="true">
+			<arg value="${proxy.source}" />
+		</exec>
+		<touch file="${proxy.dir.timestamp}" />
+	</target>
+
+	<target name="proxy-java" depends="proxygen">
+		<javac srcdir="${proxy.java.dir}" destdir="${proxy.classes.dir}" 
+			classpath="${jni4net.jar}"  failonerror="true"/>
+	</target>
+
+	<target name="proxy-jar" depends="proxy-java">
+		<jar destfile="${proxy.jar}" basedir="${proxy.classes.dir}"  />
+	</target>
+
+	<target name="proxy-dll" depends="proxygen,goop">
+		<exec executable="${csc}" failonerror="true"> <!-- dir="${proxy.dir}" --> 
+			<!-- arg value="/nologo" /-->
+			<arg value="/warn:0" />
+			<arg value="/target:library" />
+			<arg value="/out:${proxy.dll}" />
+			<arg value="/recurse:${proxy.cs.dir}\*.cs" />
+			<arg value="/reference:${.net.system.speech}" />
+			<arg value="/reference:${goop.dll}" />
+			<arg value="/reference:${mgoop.dll}" />
+			<arg value="/reference:${ms.speech}" />
+			<arg value="/reference:${jni4net.dll}" />
+		</exec>
+	</target>
+	
+	<target name="build" depends="proxy-dll,proxy-jar,proxy-check" unless="proxy.uptodate"/>
+
+</project>

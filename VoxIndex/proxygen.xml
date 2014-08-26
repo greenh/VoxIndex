@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jni4net-proxygen xmlns="http://jni4net.sf.net/0.8.6.0/toolConfig.xsd">
+  <!-- Location where .java files will be generated into. It's relative or 
+    absolute path. -->
+  <TargetDirJvm>java</TargetDirJvm>
+
+  <!-- Location where .cs files will be generated into. It's relative or 
+    absolute path. -->
+  <TargetDirClr>csharp</TargetDirClr>
+
+  <!-- List of assemblies, which define known types for generator -->
+  <AssemblyReference
+    Assembly="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"/>
+  <AssemblyReference
+    Assembly="System.Speech, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"/>
+  <AssemblyReference
+    Assembly="C:\Users\hhgreen\My Documents\Visual Studio 2012\Projects\Goop\Goop\bin\Release\Goop.dll"/>
+  <AssemblyReference
+    Assembly="C:\Users\hhgreen\My Documents\Visual Studio 2012\Projects\Goop\MGoop\bin\Release\MGoop.dll"/>
+  <AssemblyReference
+    Assembly="C:\Program Files\Microsoft SDKs\Speech\v11.0\Assembly\Microsoft.Speech.dll"/>
+
+  <!-- List of CLR types which should have proxy generated -->
+  <ClrType TypeName="System.EventArgs"/>
+  <ClrType TypeName="System.EventHandler"/>
+  <ClrType TypeName="System.TimeSpan"/>
+  <!--  ClrType TypeName="System.Collections.ICollection"/>
+  <ClrType TypeName="System.Collections.IDictionary"/>
+  <ClrType TypeName="System.Collections.IEnumerator"/>
+  <ClrType TypeName="System.Collections.IDictionaryEnumerator"/>
+  <ClrType TypeName="System.Collections.KeyValuePair"/>
+  <ClrType TypeName="System.Collections.ObjectModel.Collection`1"/>
+  <ClrType TypeName="System.Collections.ObjectModel.ReadOnlyCollection`1"/-->
+  <ClrType TypeName="System.Threading.Tasks.Task" NoMethods="true"/>
+  <ClrType TypeName="System.IO.Stream" NoMethods="true"/>
+  <ClrType TypeName="System.IO.MemoryStream"/>
+  <ClrType TypeName="System.Speech.AudioFormat.SpeechAudioFormatInfo"/>
+
+  <ClrType TypeName="System.Speech.Recognition.Choices"/>
+  <ClrType TypeName="System.Speech.Recognition.DictationGrammar"/>
+  <ClrType TypeName="System.Speech.Recognition.Grammar"/>
+  <ClrType TypeName="System.Speech.Recognition.GrammarBuilder"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognitionEventArgs"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognizeMode"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognizedAudio"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognizedPhrase"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognizerInfo"/>
+  <ClrType TypeName="System.Speech.Recognition.ReplacementText"/>
+  <ClrType TypeName="System.Speech.Recognition.SemanticResultKey"/>
+  <ClrType TypeName="System.Speech.Recognition.SemanticResultValue"/>
+  <!--ClrType TypeName="System.Speech.Recognition.SemanticValue"/-->
+  <ClrType TypeName="System.Speech.Recognition.SpeechDetectedEventArgs"/>
+  <ClrType TypeName="System.Speech.Recognition.SpeechRecognitionRejectedEventArgs"/>
+  <ClrType TypeName="System.Speech.Recognition.SpeechHypothesizedEventArgs"/>
+  <ClrType TypeName="System.Speech.Recognition.SpeechRecognitionEngine"/>
+  <ClrType TypeName="System.Speech.Recognition.SpeechRecognizer"/>
+  <ClrType TypeName="System.Speech.Recognition.SpeechRecognizedEventArgs"/>
+  <ClrType TypeName="System.Speech.Recognition.StateChangedEventArgs"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognizerState"/>
+  <ClrType TypeName="System.Speech.Recognition.RecognitionResult"/>
+  
+  <ClrType TypeName="Microsoft.Speech.Recognition.Choices"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.Grammar"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.GrammarBuilder"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.RecognitionEventArgs"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.RecognizeMode"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.RecognizedAudio"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.RecognizedPhrase"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.RecognizerInfo"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.ReplacementText"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.SemanticResultKey"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.SemanticResultValue"/>
+  <!--ClrType TypeName="Microsoft.Speech.Recognition.SemanticValue"/-->
+  <ClrType TypeName="Microsoft.Speech.Recognition.SpeechDetectedEventArgs"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.SpeechRecognitionRejectedEventArgs"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.SpeechHypothesizedEventArgs"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.SpeechRecognitionEngine"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.SpeechRecognizedEventArgs"/>
+  <ClrType TypeName="Microsoft.Speech.Recognition.RecognitionResult"/>
+
+  <!--ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsDocument"/-->
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsElement"/>
+  <!--ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsGrammarCompiler"/-->
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsGrammarMode"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsItem"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsNameValueTag"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsOneOf"/>
+  <!--ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsPhoneticAlphabet"/-->
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsRule"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsRuleRef"/>
+  <!--X ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsRulesCollection"/-->
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsRuleScope"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsSemanticInterpretationTag"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsSubset"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsText"/>
+  <ClrType TypeName="System.Speech.Recognition.SrgsGrammar.SrgsToken"/>  
+  
+  <ClrType TypeName="Goop.Speechify"/>
+  <ClrType TypeName="Goop.SVx"/>
+  <ClrType TypeName="Goop.SVInterp"/>
+  <!--  ClrType TypeName="Goop.SRAdapter"/-->
+  <ClrType TypeName="Goop.SEAdapter"/>
+  <ClrType TypeName="Goop.RecognizerResultInterpreter"/>
+  <!--  ClrType TypeName="Grammary.GrammarDoc"/ -->
+  
+  <ClrType TypeName="MGoop.Speechify"/>
+  <ClrType TypeName="MGoop.SVx"/>
+  <ClrType TypeName="MGoop.SVInterp"/>
+  <ClrType TypeName="MGoop.SEAdapter"/>
+  <ClrType TypeName="MGoop.RecognizerResultInterpreter"/>
+
+
+</jni4net-proxygen>
