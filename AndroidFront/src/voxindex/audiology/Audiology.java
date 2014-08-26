@@ -57,7 +57,7 @@ import android.widget.Toast;
 import voxindex.audiology.R;
 
 /**
- * Main application class.
+ * Main activity for the app.
  */
 @SuppressLint({ "SimpleDateFormat", "DefaultLocale" }) 
 public class Audiology extends Activity {

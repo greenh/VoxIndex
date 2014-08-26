@@ -83,8 +83,6 @@ public class LoginParams {
 			o.put("session", session);
 			o.put("remember", remember);
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return o;
 	}	// toJSON
