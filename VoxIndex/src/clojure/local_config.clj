@@ -17,9 +17,7 @@
     )
   (:require 
     [indexterous.javadoc.javadoc] 
-    [voxindex.vshell.javadoc.javadoc-grammar] 
     [indexterous.android.android-doc]
-    [voxindex.vshell.android.android-grammar]
     [voxindex.server.voxjet :as voxjet] 
     )
   )
@@ -32,10 +30,13 @@
 
 (def local-contexts 
   (local-context-map
-    ["urn:local:gwt-2.6.1" "/content/gwt-2.6.1" "C:\\Users\\hhgreen\\Libraries\\gwt-2.6.1\\doc\\javadoc"]
-    ["urn:local:jdk-1.7u17" "/content/jdk-1.7u17" "C:\\Users\\hhgreen\\Libraries\\jdk-7u17-apidocs\\docs\\api"]
-    ["urn:local:sphinx4" "/content/sphinx4" "C:\\Program Files (Noninstalled)\\sphinx4-1.0beta6\\javadoc"]
-    ["urn:local:android-4.2.1" "/content/android" "C:\\Users\\hhgreen\\AppData\\Local\\Android\\android-sdk\\docs"]
+    ["gwt-2.6.1" "/content/gwt-2.6.1" "C:\\Users\\hhgreen\\Libraries\\gwt-2.6.1\\doc\\javadoc"]
+    ["jdk-1.7u67" "/content/jdk-1.7u67" "C:\\Users\\hhgreen\\Libraries\\jdk-7u67-apidocs\\docs\\api"]
+    ["jdk-1.8u20" "/content/jdk-1.8u20" "C:\\Users\\hhgreen\\Libraries\\jdk-8u20-apidocs\\docs\\api"]
+    ["sphinx4" "/content/sphinx4" "C:\\Program Files (Noninstalled)\\sphinx4-1.0beta6\\javadoc"]
+    ["android-4.2.1" "/content/android" "C:\\Users\\hhgreen\\AppData\\Local\\Android\\android-sdk\\docs"]
+    ["jetty-7.6.10" "/content/jetty-7.6.10" "C:\\Users\\hhgreen\\Libraries\\jetty-distribution-7.6.10.v20130312\\javadoc"]
+    ["jee6.0.1" "content/jee6.0.1" "C:\\Users\\hhgreen\\Libraries\\jee-6.0.1"]
     ))
 
 (def use-contexts 

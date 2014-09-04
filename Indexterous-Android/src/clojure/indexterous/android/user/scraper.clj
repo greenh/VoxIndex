@@ -1,4 +1,4 @@
-#_ ( Copyright (c) 2011 - 2014 Howard Green. All rights reserved.
+#_ ( Copyright (C) 2014 Howard Green. All rights reserved.
                 
      The use and distribution terms for this software are covered by the
      Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
@@ -12,7 +12,7 @@
       documentation tree and depositing it in an Indexterous database. 
       @(link doc-extract) is the main front end function.
       )
-(ns indexterous.android.client.scraper
+(ns indexterous.android.user.scraper
   (:import
     [indexterous.util BBQueue]
     [java.io PrintStream File]
@@ -458,7 +458,7 @@
         (if (mvdef? mvec public-methods-detail)
           (map (fn [[target name parameters]]
                  (do-ix AndroidMethod 
-                   name source-ref (str type-rel-uri "#" target) 
+                   name source-ref "0" (str type-rel-uri "#" target) 
                    parent-iids type-qname parameters))
             (public-methods-seq mvec content)))
 
@@ -466,7 +466,7 @@
         (if (mvdef? mvec protected-methods-detail) 
           (map (fn [[target name parameters]]
                  (do-ix AndroidMethod 
-                   name source-ref (str type-rel-uri "#" target) 
+                   name source-ref "0" (str type-rel-uri "#" target) 
                    parent-iids type-qname parameters))
             (protected-methods-seq mvec content)))
         
@@ -474,7 +474,7 @@
         (if (or (mvdef? mvec public-ctors-detail) (mvdef? mvec protected-ctors-detail)) 
           (map (fn [[target name parameters]]
                  (do-ix AndroidConstructor :t ["constructor"] 
-                   name source-ref (str type-rel-uri "#" target)
+                   name source-ref "0" (str type-rel-uri "#" target)
                    parent-iids type-qname parameters))
             (concat 
               (if (mvdef? mvec public-ctors-detail)(public-ctors-seq mvec content) [])
@@ -484,21 +484,24 @@
         (if (mvdef? mvec constants-detail) 
           (map (fn [[target]]
                  (do-ix AndroidConstant 
-                   target source-ref (str type-rel-uri "#" target) parent-iids type-qname))
+                   target source-ref "0" 
+                   (str type-rel-uri "#" target) parent-iids type-qname))
             (constants-seq mvec content)))
           
         field-entries
         (if (mvdef? mvec fields-detail) 
           (map (fn [[target]]
                  (do-ix AndroidField 
-                   target source-ref (str type-rel-uri "#" target) parent-iids type-qname))
+                   target source-ref "0" 
+                   (str type-rel-uri "#" target) parent-iids type-qname))
             (fields-seq mvec content)))
           
         enum-constant-entries
         (if (mvdef? mvec enum-constants-detail) 
           (map (fn [[target]]
                  (do-ix AndroidEnumConstant 
-                   target source-ref (str type-rel-uri "#" target) parent-iids type-qname))
+                   target source-ref "0" 
+                   (str type-rel-uri "#" target) parent-iids type-qname))
             (enum-constants-seq mvec content)))
           
          annotation-entries nil
@@ -512,7 +515,8 @@
         (if (mvdef? mvec attributes-detail)
           (map (fn [[target t-name]]
                  (do-ix AndroidAttribute :a
-                   t-name source-ref (str type-rel-uri "#" target) parent-iids type-qname))
+                   t-name source-ref "0" 
+                   (str type-rel-uri "#" target) parent-iids type-qname))
             (attributes-seq mvec content)))
           
         kind-set  ; not clear we need this any more
@@ -532,7 +536,7 @@
         (letfn [(ifn [entries+ what target title terms]
                        (if what
                          (let [entry (do-ix Bookmark :t terms
-                                            source-ref 
+                                            source-ref "0" 
                                             (str type-rel-uri "#" target) 
                                             (str type-qname " | " title)
                                             parent-iids)]
@@ -541,7 +545,7 @@
                 (ifr [entries+ what rel-uri title terms]
                        (if what
                          (let [entry (do-ix Bookmark :t terms
-                                       source-ref 
+                                       source-ref "0" 
                                        rel-uri 
                                        (str type-qname " | " title)
                                        parent-iids)]
@@ -673,16 +677,16 @@
                   (condp = kind
                     "class" 
                     (do-ix AndroidClass :t terms
-                      name source-ref doc type-iid package member-kind-set member-index-id)
+                      name source-ref "0" doc type-iid member-index-id package member-kind-set)
                     "interface" 
                     (do-ix AndroidInterface  :t terms
-                      name source-ref doc type-iid package member-kind-set member-index-id)
+                      name source-ref "0" doc type-iid member-index-id package member-kind-set)
                     "annotation" 
                     (do-ix AndroidAnnotation  :t terms
-                      name source-ref doc type-iid package member-kind-set member-index-id)
+                      name source-ref "0" doc type-iid member-index-id package member-kind-set)
                     "enum"
                     (do-ix AndroidEnum  :t terms
-                      name source-ref doc type-iid package member-kind-set member-index-id)
+                      name source-ref "0" doc type-iid member-index-id package member-kind-set)
                     
                     (message (str "Unrecognized type kind: " kind 
                                   " in " (str package "." name)) ))
@@ -844,14 +848,11 @@
                   package-index 
                   (new-Index (Oid/oid) pkg-name (str "Index of " pkg-name) source-ref 
                              (new-specs nil nil type-entries))
-                  
-                  package-indexable
-                  (new-AndroidPackage pkg-name source-ref type-iid package-index)
-                  
-                  ;; entry: [source-term indexable-ref term-or-terms]
+
                   package-entry 
-                  (new-entry pkg-name package-indexable (id-vocalizer pkg-name))
+                  (do-ix AndroidPackage pkg-name source-ref "0" type-iid package-index)
                   ]
+              (zap package-index)
               (package-msg (format "%d: package %s complete %d types %d members" 
                                    id pkg-name (count type-entries) member-count))
               
@@ -893,16 +894,16 @@
              
 		         class-index-entry   
 		         (do-ix Bookmark :t  ["index of classes" "class index"]
-                    (source-id-of job) 
+                    (source-id-of job) "0" 
 		                "reference/classes.html" "Class Index" nil)
            
 		         package-index-entry
 		         (do-ix Bookmark :t ["index of packages" "package index"]
-                    (source-id-of job) 
+                    (source-id-of job) "0" 
 		                "reference/packages.html" "Package Index" nil)
            
            poo
-         (new-AndroidTypeIndex
+         (new-ContextualIndex ; new-AndroidTypeIndex
                 (type-index-id-of job)
                 (str (source-name-of job) "-types") 
                 (str (source-desc-of job) " Types")
@@ -927,7 +928,7 @@
                   "Packages" ["package"] pkg-entries
                   "Convenience" nil [class-index-entry package-index-entry])))
          
-         (zap (new-AndroidPackageIndex
+         (zap (new-ContextualIndex ; new-AndroidPackageIndex
                 (package-index-id-of job)
                 (str (source-name-of job) "-packages")
                 (str (source-desc-of job) " Packages")
@@ -950,7 +951,7 @@
      )
 (defn doc-process [name description version base-uri remote-uri 
                         {:keys [threads members vm vt vp include exclude]}]
-  (let [source (zap (new-AndroidSource name description version name remote-uri))
+  (let [source (zap (new-AndroidSource name description version { "0" remote-uri }))
         job (new-DocJob 
               base-uri source 
               (if (= threads 0) 1 threads) members
@@ -1021,17 +1022,17 @@
             package-root 
             (new-AndroidRoot 
                (package-index-id-of job) (str name "-packages")
-               (source-id-of job) (str description " packages"))
+               (source-id-of job) "0" (str description " packages"))
             type-root 
             (new-AndroidRoot 
-               (type-index-id-of job) name (source-id-of job) description)]
+               (type-index-id-of job) name (source-id-of job) "0" description)]
         (zap package-root)
         (zap (new-RootEntry
                (Oid/oid) (str name "-packages") (str description " packages") 
-               (source-id-of job) version (id-of package-root) pkg-terms))
+               (source-id-of job) "0" version (id-of package-root) pkg-terms))
         (zap type-root)
         (zap (new-RootEntry
-               (Oid/oid) name description (source-id-of job) version 
+               (Oid/oid) name description (source-id-of job) "0" version 
                (id-of type-root) type-terms))
         (output-flush)
         (.close out-stream))))

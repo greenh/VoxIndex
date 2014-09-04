@@ -224,15 +224,17 @@
   (let [roots (fetch-all db (root-collection db))]
     (doseq [root roots]
       (println (description-of root) (id-of root) (vec (map enquote (root-terms-of root))) 
-               (str(source-refs-of root)) (str (root-indexable-ref-of root)))) ))
+               (str (locator-key-of root) " in " (source-ref-of root)) 
+               (str (root-indexable-ref-of root)))) ))
 
 (defn show-sources [db]
   (let [sources (fetch-all db (source-collection db))]
     (doseq [source sources]
       (println (description-of source) (name-of source) (id-of source) 
-               (cond 
-                 (satisfies? ConsultableSource source) (str "URI: " (service-uri-of source))
-                 (satisfies? LocatableSource source) (str "Loc: " (location-of source)))))))
+        (apply str 
+          (interpose " " 
+            (map (fn [[key locator]] (str key ": " locator))
+              (locator-map-of source))))))))
 
 
 

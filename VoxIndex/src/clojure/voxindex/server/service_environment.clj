@@ -44,6 +44,15 @@
         (assoc cm uri context)))
     {} contexts))
 
+(def no-sep-re #"[#/?].*")
+
+#_ (* Looks at a relative URI and decides whether or not to add a "/" before
+     the it's appended to a base URI.)
+(defn- separate [rel-uri]
+  (if (re-matches no-sep-re rel-uri)
+    rel-uri
+    (str "/" rel-uri)))
+
 #_ (* Object that encapsulates all the parameters that describe local service environment,
       and provides methods for calculating, e.g., the URLs needed to externally reference
       locally supplied content.
@@ -122,39 +131,67 @@
   
   (use-map-of [this] use-map)
   
-;  #_ (* Determines whether a source is intended to served by a to-be-identified
-;        "local" server, as opposed to a well-known server on the web.
-;        @p Local sources are identified by a URN, instead of a URL... but the 
-;        content is abitrary, as we look up actual URLs in 
-;        )
-;  (source-locally-served? [this source]
-;     (boolean (re-matches #"urn:" (service-uri-of source))))
+  (secure-map [this map-key] 
+     (if-let [context (get context-map map-key)] 
+       (str (service-secure-uri-base this) (context-path-of context))
+       
+       ;; This sucks, but it's better than nothing
+       (binding [*out* *err*]
+           (println (str "Missing context for key " map-key) ))))
   
-  #_ (* Generates a URI for a source, accounting for whether or not the source
-        is locally served.
-        @arg source A @(il ConsultablySourced) derivative object.
+  (nonsecure-map [this map-key] 
+     (if-let [context (get context-map map-key)] 
+         (str (service-uri-base this) (context-path-of context))
+         
+         ;; This sucks, but it's better than nothing
+         (binding [*out* *err*]
+           (println (str "Missing context for key " map-key) ))))
+  
+  #_ (* Generates a list of (URI, source-id, locator-key) tuples for a source.
+        @arg source A @(l ConsultablySourced) derivative object.
         @arg secure True for SSL-based URL.
-        @returns The mapped URL for the source.
+        @returns A collection of mapped (URI, source-id locator-key) tuples for the source.
         )
-  (mapped-source-uri [this source secure]
-    (if (index/locally-served? source)
-      (if-let [context (get context-map (index/service-uri-of source))] 
-        (str (if secure (service-secure-uri-base this) (service-uri-base this)) 
-              #_"/" (context-path-of context)))
-      (index/service-uri-of source)))
+  (mapped-source-uris [this source secure]
+    (let [source-id (index/id-of source)] 
+      (map 
+       (fn [[k locator]] 
+         (if-let [[_ local-id] (re-matches #"urn\:local\:(.*)" locator)]
+           [(if secure (secure-map this local-id) (nonsecure-map this local-id)) 
+            source-id k]
+           [locator source-id k]))
+       (index/locator-map-of source))))
   
-  #_ (* Generates a URI for a path belonging to a source. 
-        @p Either the path is relative to a specified source, in which case it's 
-        appended to a base URI defined by the source, or is an absolute URI in its
-        own right, in which case it's returned as-is.
-        @arg source A @(il ConsultablySourced) derivative object.
-        @arg path The path to be mapped.
+  #_ (* Generates a URI for an indexable with a source. 
+        @p Either the path is\:
+        @(ul 
+           @li an absolute URI in its own right, in which case it's returned as-is
+           @li relative to a locally-served context, as indicated by
+           a locator of "urn:local:<context-id>", in which case we look up
+           the base URI for the context, and extend it by the indexable's relative URI.
+           @li relative to a URI specified by the locator, which we extend by
+           the indexable's relative URI.)
+        @arg source A @(l ConsultablySourced)-derivative source object.
+        @arg indexable The indexable to generate the URI for.
+        @arg secure If the 
         @returns The mapped URL for the source.
         )
-  (mapped-uri [this source path secure]
-    (if (re-matches #"[\w+-.]+:.*" path) 
-      path 
-      (str (mapped-source-uri this source secure) "/" path))          )
+  (mapped-uri [this source indexable secure]
+    (let [rel-uri (index/relative-uri-of indexable)
+          loc-key (index/locator-key-of indexable)
+          locator (index/locator-at source loc-key)]
+      (if (or (nil? loc-key) 
+            (re-matches #"https*\://.*" rel-uri))  ;; is it _really_ relative?
+        rel-uri ;; just return as-is
+
+        ;; if it _is_ a relative uri, find the appropriate base to prepend
+        (if-let [[_ local-id] (re-matches #"urn\:local\:(.*)" locator)] 
+          ;; it's a locally-served context ID
+          (if secure 
+            (str (secure-map this local-id) (separate rel-uri))
+            (str (nonsecure-map this local-id) (separate rel-uri)))
+          ;; it's a conventional base URI
+          (str locator (separate rel-uri))))))
   
   (service-index-service-base [this] "/vox-index/index-service")
   
@@ -162,6 +199,7 @@
         @returns The URI string.
         )
   (service-index-service-uri [this] 
-    (str (service-uri-base this) (service-index-service-base this))))
-
+    (str (service-uri-base this) (service-index-service-base this)))
+  
+  ) ;; ServiceEnvironment
 

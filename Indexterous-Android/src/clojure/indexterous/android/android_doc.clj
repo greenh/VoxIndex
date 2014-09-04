@@ -1,4 +1,4 @@
-#_ ( Copyright (c) 2013 Howard Green. All rights reserved.
+#_ ( Copyright (c) 2011, 2014 Howard Green. All rights reserved.
                 
      The use and distribution terms for this software are covered by the
      Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
@@ -34,7 +34,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #_ (* Represents an Android documentation tree. )
 (defexin AndroidSource type-uri
-  [(ConsultableSource name description version local-id service-uri)] [] 
+  [(Source name description version locator-map)] [] 
   
   java.lang.Object 
   (toString [this] (str "#<AndroidSource " name " " (id-string-of this) ">" ))
@@ -48,7 +48,7 @@
      )
 (defexin AndroidRoot type-uri
   [(RootIndexable index-ref index-name) 
-   (ConsultablySourced source-ref (relative-uri "reference/classes.html"))
+   (ConsultablySourced source-ref locator-key (relative-uri "reference/classes.html"))
    (Titled title)] []
   
   java.lang.Object 
@@ -60,7 +60,7 @@
 (defexin AndroidPackage type-uri
   [Indexable 
    (Named name)
-   (ConsultablySourced source-ref  
+   (ConsultablySourced source-ref locator-key
                        (relative-uri (str "reference/" (qname-to-path name) 
                                           "/package-summary.html"))) 
    (Parented parents)]
@@ -79,12 +79,13 @@
 (defextenso AndroidType 
   [Indexable 
    (Named name)
-   (ConsultablySourced source-ref relative-uri)
-   (Parented parents)] 
-  [package-name kind-set members-index-ref]
+   (ConsultablySourced source-ref locator-key relative-uri)
+   (Parented parents)
+   (HasSubindex subindex-ref)] 
+  [package-name kind-set]
   (qname-of [this] (str package-name "." name))
-  (members-index-ref-of [this] members-index-ref)
-  (members-index-ref-string [this] (str members-index-ref))
+;  (members-index-ref-of [this] subindex-ref)
+;  (members-index-ref-string [this] (str subindex-ref))
   
   (member-kind-set [inx] kind-set)
   (has-members? [this] (not (empty? kind-set)))
@@ -103,16 +104,16 @@
   )
 
 (defexin AndroidClass type-uri 
-  [(AndroidType name source-ref relative-uri parents package-name kind-set members-index-ref)] [] )
+  [(AndroidType name source-ref locator-key relative-uri parents subindex-ref package-name kind-set)] [] )
 
 (defexin AndroidInterface type-uri 
-  [(AndroidType name source-ref relative-uri parents package-name kind-set members-index-ref)] [] )
+  [(AndroidType name source-ref locator-key relative-uri parents subindex-ref package-name kind-set)] [] )
 
 (defexin AndroidEnum type-uri 
-  [(AndroidType name source-ref relative-uri parents package-name kind-set members-index-ref)] [] )
+  [(AndroidType name source-ref locator-key relative-uri parents subindex-ref package-name kind-set)] [] )
 
 (defexin AndroidAnnotation type-uri 
-  [(AndroidType name source-ref relative-uri parents package-name kind-set members-index-ref)] [] )
+  [(AndroidType name source-ref locator-key relative-uri parents subindex-ref package-name kind-set)] [] )
 
 (defn class?? [jdtype] (= (class jdtype) AndroidClass))
 (defn interface?? [jdtype] (= (class jdtype) AndroidInterface))
@@ -137,7 +138,7 @@
 (defextenso AndroidMember 
   [Indexable 
    (Named name)
-   (ConsultablySourced source-ref relative-uri)
+   (ConsultablySourced source-ref locator-key relative-uri)
    (Parented parents)] 
   [type-qname kind]
   
@@ -155,7 +156,7 @@
 
 #_ (* An @(il indexterous.index.Indexable) describing the documentation for a method.)
 (defexin AndroidMethod type-uri 
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "method")) 
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "method")) 
    (Parameterized parameters)] []
   Titled
   (title-of [this] (simple-heading name parameters))
@@ -163,7 +164,7 @@
  
 #_ (* An @(il indexterous.index.Indexable) describing the documentation for a method.)
 (defexin AndroidConstructor type-uri 
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "constructor")) 
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "constructor")) 
    (Parameterized parameters)] []
   Titled
   (title-of [this] (simple-heading name parameters))
@@ -171,71 +172,71 @@
 
 #_ (* An @(il indexterous.index.Indexable) describing the documentation for a field.)
 (defexin AndroidField type-uri 
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "field"))] []
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "field"))] []
   Titled 
   (title-of [this] name)
   )
 
 #_ (* An @(il indexterous.index.Indexable) describing the documentation for a constant.)
 (defexin AndroidConstant type-uri
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "constant"))] []
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "constant"))] []
   Titled 
   (title-of [this] name)
  )
 
 #_ (* An @(il indexterous.index.Indexable) describing the documentation for an enum.)
 (defexin AndroidEnumConstant type-uri
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "enum-constant"))] []
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "enum-constant"))] []
   Titled 
   (title-of [this] name)
   )
 #_ (* An @(il indexterous.index.Indexable) describing the documentation for an annotation element.)
 (defexin AndroidAnnotationElement type-uri
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "annotation-element"))] []
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "annotation-element"))] []
   Titled 
   (title-of [this] name)
   )
 
 #_ (* An @(l indexterous.index.Indexable) describing the documentation for an attribute.)
 (defexin AndroidAttribute type-uri
-  [(AndroidMember name source-ref relative-uri parents type-qname (kind "attribute"))] []
+  [(AndroidMember name source-ref locator-key relative-uri parents type-qname (kind "attribute"))] []
   Titled 
   (title-of [this] name)
   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#_ (* An @(il indexterous.index.Index) that maps the names of types 
-     (classes, enums, interfaces, ...) to their corresponding indexables. )
-(defexin AndroidTypeIndex type-uri 
-  [(IndexBase _id name description source-refs (handler-model android-type-handler-model) specs)] 
-  []
-
-  java.lang.Object
-  (toString [this] (str "#<AndroidTypeIndex " name " " (id-string-of this)  ">" ))
-  )
-
-#_ (* An @(il indexterous.index.Index) )
-(defexin AndroidPackageIndex type-uri 
-  [(IndexBase _id name description source-refs 
-              (handler-model android-package-handler-model) specs)] []
-
-  java.lang.Object
-  (toString [this] (str "#<AndroidPackageIndex " name " " (id-string-of this) ">" ))
-  )
-
-#_ (* Defines an index of members for an Android type. 
-      @field target-set A collection of strings representing the fixed 
-      boilerplate targets (such as "public methods") found in the type. Since
-      these are well-known, there isn't any point to making indexables for them.)
-(defexin AndroidMemberIndex type-uri 
-  [(IndexBase _id name description source-refs (handler-model android-member-handler-model) specs)] 
-  [target-set]
-  
-  (target-set-of [this] target-set)
-
-  java.lang.Object
-  (toString [this] (str "#<AndroidMemberIndex " name " " (id-string-of this)  ">" ))
-  )
+;#_ (* An @(il indexterous.index.Index) that maps the names of types 
+;     (classes, enums, interfaces, ...) to their corresponding indexables. )
+;(defexin AndroidTypeIndex type-uri 
+;  [(IndexBase _id name description source-refs (handler-model android-type-handler-model) specs)] 
+;  []
+;
+;  java.lang.Object
+;  (toString [this] (str "#<AndroidTypeIndex " name " " (id-string-of this)  ">" ))
+;  )
+;
+;#_ (* An @(il indexterous.index.Index) )
+;(defexin AndroidPackageIndex type-uri 
+;  [(IndexBase _id name description source-refs 
+;              (handler-model android-package-handler-model) specs)] []
+;
+;  java.lang.Object
+;  (toString [this] (str "#<AndroidPackageIndex " name " " (id-string-of this) ">" ))
+;  )
+;
+;#_ (* Defines an index of members for an Android type. 
+;      @field target-set A collection of strings representing the fixed 
+;      boilerplate targets (such as "public methods") found in the type. Since
+;      these are well-known, there isn't any point to making indexables for them.)
+;(defexin AndroidMemberIndex type-uri 
+;  [(IndexBase _id name description source-refs (handler-model android-member-handler-model) specs)] 
+;  [target-set]
+;  
+;  (target-set-of [this] target-set)
+;
+;  java.lang.Object
+;  (toString [this] (str "#<AndroidMemberIndex " name " " (id-string-of this)  ">" ))
+;  )
 
 

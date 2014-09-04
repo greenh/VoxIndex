@@ -29,7 +29,7 @@
 #_ (* A @(link Source) for generic documents. 
       )
 (defexin DocumentSource type-uri
-  [(ConsultableSource name description version local-id service-uri)] [] 
+  [(Source name description version locator-map)] [] 
 
   java.lang.Object 
   (toString [this] (str "#<DocumentSource " name ">" ))
@@ -42,7 +42,7 @@
      )
 (defexin DocumentRoot type-uri
   [(RootIndexable index-ref index-name ) 
-   (ConsultablySourced source-ref relative-uri)
+   (ConsultablySourced source-ref locator-key relative-uri)
    (Titled title)] []
   
   java.lang.Object 
@@ -57,18 +57,18 @@
       in a browser.
       )
 (defexin Bookmark type-uri 
-  [Indexable (ConsultablySourced source-ref relative-uri) 
+  [Indexable (ConsultablySourced source-ref locator-key relative-uri) 
    (Titled title)
    (Parented parents)]  []
   java.lang.Object 
   (toString [this] (str "#<Bookmark " title " #" (id-string-of this) ">" ))
 )
 
-(defn bookmark-entry [source-ref parent-id entry]
+(defn bookmark-entry [source-ref locator-key parent-id entry]
   (if-not (and (vector? entry) (= 3 (count entry)))
     (throw (Exception. (str "Deformed entry: " (enquote entry)) )))
   (let [[terms source-term rel-uri] entry
-        indexable (new-Bookmark source-ref rel-uri source-term parent-id)
+        indexable (new-Bookmark source-ref locator-key rel-uri source-term parent-id)
         index-entry (new-entry source-term indexable terms)]
     [index-entry indexable]))
 
@@ -84,7 +84,7 @@
      )
 (defexin SequencedBookmark type-uri
   [Indexable 
-   (ConsultablySourced source-ref relative-uri) 
+   (ConsultablySourced source-ref locator-key relative-uri) 
    (Titled title)
    (Parented parents)] 
   [level seq-key]

@@ -30,9 +30,8 @@
 (defonce javadoc-package-handler-model "JD-Package")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defexin JavadocSource type-uri
-  [(ConsultableSource name description version local-id service-uri)] [] 
+#_ (* Represents a Javadoc tree.)
+(defexin JavadocSource type-uri [(Source name description version locator-map)] [] 
   
   java.lang.Object 
   (toString [this] (str "#<JavadocSource " name ">" ))
@@ -46,7 +45,7 @@
      )
 (defexin JavadocRoot type-uri
   [(RootIndexable index-ref index-name) 
-   (ConsultablySourced source-ref (relative-uri overview-summary))
+   (ConsultablySourced source-ref locator-key (relative-uri overview-summary))
    (Titled title)] []
   
   java.lang.Object 
@@ -58,7 +57,7 @@
 (defexin JavadocPackage type-uri
   [Indexable 
    (Named name)
-   (ConsultablySourced source-ref  
+   (ConsultablySourced source-ref locator-key
                        (relative-uri (str (qname-to-path name) 
                                           "/package-summary.html"))) 
    (Parented parents)]
@@ -71,16 +70,20 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#_ (* An extenso that's the base for an @(li Indexable) that describes a Javadoc 
+     type, such as a class or interface.
+     )
 
 (defextenso JavadocType 
   [Indexable 
    (Named name)
-   (ConsultablySourced source-ref relative-uri)
-   (Parented parents)] 
-  [package-name kind-set members-index-ref]
+   (ConsultablySourced source-ref locator-key relative-uri)
+   (Parented parents)
+   (HasSubindex subindex-ref)] 
+  [package-name kind-set]
   (qname-of [this] (str package-name "." name))
-  (members-index-ref-of [this] members-index-ref)
-  (members-index-ref-string [this] (str members-index-ref))
+;  (members-index-ref-of [this] subindex-ref)
+;  (members-index-ref-string [this] (str subindex-ref))
   
   (member-kind-set [inx] kind-set)
   (has-members? [this] (not (empty? kind-set)))
@@ -97,24 +100,27 @@
   (toString [this] (str "#<" (.getSimpleName (class this)) " " (qname-of this) ">"))
   )
 
+#_ (* Indexable representing a Java class.)
 (defexin JavadocClass type-uri 
-  [(JavadocType name source-ref relative-uri parents package-name
-                kind-set members-index-ref)] [] )
+  [(JavadocType name source-ref locator-key relative-uri parents subindex-ref
+     package-name kind-set)] [] )
 
 
+#_ (* Indexable representing a Java interface.)
 (defexin JavadocInterface type-uri 
-  [(JavadocType name source-ref relative-uri parents package-name
-                kind-set members-index-ref)] [] )
+  [(JavadocType name source-ref locator-key relative-uri parents subindex-ref 
+     package-name kind-set)] [] )
 
 
+#_ (* Indexable representing a Java enum.)
 (defexin JavadocEnum type-uri 
-  [(JavadocType name source-ref relative-uri parents package-name
-                kind-set members-index-ref)] [] )
+  [(JavadocType name source-ref locator-key relative-uri parents subindex-ref
+     package-name kind-set)] [] )
 
-
+#_ (* Indexable representing a Java annotation type.)
 (defexin JavadocAnnotation type-uri 
-  [(JavadocType name source-ref relative-uri parents package-name
-                kind-set members-index-ref)] [] )
+  [(JavadocType name source-ref locator-key relative-uri parents subindex-ref 
+     package-name kind-set)] [] )
 
 (defn class?? [jdtype] (= (class jdtype) JavadocClass))
 (defn interface?? [jdtype] (= (class jdtype) JavadocInterface))
@@ -129,16 +135,18 @@
 (defn simple-heading [name params] 
   (str name "(" (apply str (interpose ", " (simple-parameters params))) ")"))
 
+#_ (* An extenso used to describe objects that have parameters. )
 (defextenso Parameterized [] [parameters]
   (parameters-of [this] parameters)
   (simple-parameters-of [this] (simple-parameters parameters))
   
   )
 
+#_ (* An extenso used to describe objects that are members of Java types.)
 (defextenso JavadocMember 
   [Indexable 
    (Named name)
-   (ConsultablySourced source-ref relative-uri)
+   (ConsultablySourced source-ref locator-key relative-uri)
    (Parented parents)] 
   [type-qname kind]
   
@@ -150,17 +158,19 @@
                         " " (type-qname-of this) "." (title-of this) ">"))
   )
 
+#_ (* Indexable representing a method.)
 (defexin JavadocMethod type-uri 
-  [(JavadocMember name source-ref relative-uri parents type-qname (kind "method")) 
+  [(JavadocMember name source-ref locator-key relative-uri parents type-qname (kind "method")) 
    (Parameterized parameters)] []
   Titled
   (title-of [this] (simple-heading name parameters))
   SuperTitled
   (supertitle-of [this] (str type-qname " | " (title-of this)))
   )
-  
+ 
+#_ (* Indexable representing a constructor.)
 (defexin JavadocConstructor type-uri 
-  [(JavadocMember name source-ref relative-uri parents type-qname (kind "constructor")) 
+  [(JavadocMember name source-ref locator-key relative-uri parents type-qname (kind "constructor")) 
    (Parameterized parameters)] []
   Titled 
   (title-of [this] (simple-heading name parameters))
@@ -168,8 +178,9 @@
   (supertitle-of [this] (str type-qname " | " (title-of this)))
   )
 
+#_ (* Indexable representing a field.)
 (defexin JavadocField type-uri 
-  [(JavadocMember name source-ref relative-uri parents type-qname (kind "field")) ] []
+  [(JavadocMember name source-ref locator-key relative-uri parents type-qname (kind "field")) ] []
   Titled 
   (title-of [this] name)
   SuperTitled
@@ -177,16 +188,18 @@
   )
   
 
+#_ (* Indexable representing a constant.)
 (defexin JavadocConstant type-uri
-  [(JavadocMember name source-ref relative-uri parents type-qname (kind "constant"))] []
+  [(JavadocMember name source-ref locator-key relative-uri parents type-qname (kind "constant"))] []
   Titled 
   (title-of [this] name)
   SuperTitled
   (supertitle-of [this] (str type-qname " | " (title-of this)))
   )
 
+#_ (* Indexable representing an element of an annotation.)
 (defexin JavadocAnnotationElement type-uri
-  [(JavadocMember name source-ref relative-uri parents type-qname (kind "annotation-element"))] []
+  [(JavadocMember name source-ref locator-key relative-uri parents type-qname (kind "annotation-element"))] []
   Titled 
   (title-of [this] name)
   SuperTitled
@@ -200,29 +213,29 @@
 (defn annotation-element?? [member] (= (class member) JavadocAnnotationElement))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defexin JavadocTypeIndex type-uri 
-  [(IndexBase _id name description source-refs (handler-model javadoc-type-handler-model) specs)] 
-  []
-
-  java.lang.Object
-  (toString [this] (str "#<JavadocTypeIndex " _id " " name ">" ))
-  )
-
+;#_ (* An index whose entries refer to indexables representing Java types.)
+;(defexin JavadocTypeIndex type-uri 
+;  [(ContextualIndexBase _id name description source-ref specs)] 
+;  []
+;
+;  java.lang.Object
+;  (toString [this] (str "#<JavadocTypeIndex " _id " " name ">" ))
+;  )
+;
 ; (defexin JavadocMemberIndex type-uri 
 ;   [(IndexBase (_id (Oid/oid)) name description source-refs 
 ;               (handler-model javadoc-member-handler-model) specs)] []
-
+;
 ;   java.lang.Object
 ;   (toString [this] (str "#<Index " _id " " name ">" ))
 ;   )
-
-
-(defexin JavadocPackageIndex type-uri 
-  [(IndexBase _id name description source-refs 
-              (handler-model javadoc-package-handler-model) specs)] []
-
-  java.lang.Object
-  (toString [this] (str "#<JavadocPackageIndex " _id " " name ">" ))
-  )
+;
+;#_ (* An index whose entries refer to indexables representing Java packages.)
+;(defexin JavadocPackageIndex type-uri 
+;  [(IndexBase _id name description source-ref
+;              (handler-model default-handler-model) specs)] []
+;
+;  java.lang.Object
+;  (toString [this] (str "#<JavadocPackageIndex " _id " " name ">" ))
+;  )
 

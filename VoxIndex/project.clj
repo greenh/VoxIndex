@@ -26,7 +26,7 @@
   :test-paths ["test"]
   :compile-path "classes"
   :dependencies [
-    [org.clojure/clojure "1.5.1"]
+    [org.clojure/clojure "1.6.0"]
     [extensomatic "0.2.0"] 
     [voxindex/indexterous "0.0.0-SNAPSHOT"]
     [voxindex/indexterous-javadoc "0.0.0-SNAPSHOT"] 

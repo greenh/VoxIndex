@@ -119,7 +119,7 @@
   
   ConsultablySourced
   (relative-uri-of [this])
-  (service-uri-from [this source] (indexable-service-uri-of source this))
+  #_(service-uri-from [this source] (indexable-service-uri-of source this))
   
   java.lang.Object 
   (toString [this] (str "#<PageIndexable \"" title "\" #" (id-string-of this) ">" ))

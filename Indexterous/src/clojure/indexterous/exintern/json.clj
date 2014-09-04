@@ -47,7 +47,7 @@
 (defn typed-object [t v] { type-key t value-key v })
 
 #_ (* Externalizer for externalizing a body of 
-      @(li indexterous.exintern.exintern_base.Externalizable)-conformant objects into 
+      @(il indexterous.exintern.exintern_base.Externalizable)-conformant objects into 
       JSON.
       )
 (defconstructo JSONExternalizer [] [(xoid-map* (ref {})) (next-xoid* (ref 0))]
@@ -109,6 +109,7 @@
   (get-value [this ext-obj key] (get ext-obj key))
   
   (internalize-object [this obj]
+    #_(prn 'internalizing obj)
     (cond 
       (map? obj)
       (let [{ type-of type-key value-of value-key } obj]
@@ -126,7 +127,8 @@
             (type-internalize obj this)
             )
           ; no type indication, so assume it's just a map.
-          (remap (fn [k v] [k (internalize-object this v)]) obj)
+          (remap (fn [k v]
+                   [k (internalize-object this v)]) obj)
           ))
       
       (coll? obj) (vec (map (fn [x] (internalize-object this x)) obj))
@@ -167,52 +169,55 @@
       @arg content A representation of the content, a Reader or File or URL or 
       file name or whatever, as allowed by @(l clojure.java.io/reader).
       )
-(defn dbload [mongo dbname source & options]
-  (let [db (new-DB mongo dbname)
-        opts (set options)
+(defn dbload [dbname source & options]
+  (let [opts (set options)
         v (:v opts)]
-    (with-open [rdr (clojure.java.io/reader source)]
-      (loop [sources []
-             indexes []
-             indexables []
-             roots []
-             [obj & objs :as o] (internalize-document rdr)]
-        #_(prn '--> obj) 
-        (if obj
-          (cond 
-            (instance? indexterous.index.index.Indexable obj)
-            (if (> (count indexables) v-threshold)
-              (do 
-                (if v (do (print "x") (flush)))
-                (do-insert db (indexable-collection db) indexables)
-                (recur sources indexes [obj] roots objs))
-              (recur sources indexes (conj indexables obj) roots objs))
-            
-            (instance? indexterous.index.index.IndexBase obj)
-            (if (> (count indexables) v-threshold)
-              (do 
-                (do-insert db (index-collection db) indexes)
-                (if v (print "i")) 
-                (recur sources [obj] indexables roots objs))
-              (recur sources (conj indexes obj) indexables roots objs))
-            
-            (instance? indexterous.index.index.Source obj)
-            (recur (conj sources obj) indexes indexables roots objs)
-            
-            (instance? indexterous.index.index.RootEntry obj)
-            (recur sources indexes indexables (conj roots obj) objs)
-            
-            :else 
-            (throw (Exception. (str "-- Unrecognized imported object type: " (class obj))))
-            )
-          (do
-            (if (> (count sources) 0)
-              (do-insert db (source-collection db) sources))
-            (if (> (count roots) 0)
-              (do-insert db (root-collection db) roots))
-            (if (> (count indexes) 0)
-              (do-insert db (index-collection db) indexes))
-            (if (> (count indexables) 0)
+    (with-open [mongo (Mongo.)
+                rdr (clojure.java.io/reader source)]
+      (let [db (new-DB mongo dbname)]
+        (loop [sources []
+               indexes []
+               indexables []
+               roots []
+               [obj & objs :as o] (internalize-document rdr)]
+          #_(prn '--> obj) 
+          (if obj
+            (cond 
+              (instance? indexterous.index.index.Indexable obj)
+              (if (> (count indexables) v-threshold)
+                (do 
+                  (if v (do (print "x") (flush)))
+                  (do-insert db (indexable-collection db) indexables)
+                  (recur sources indexes [obj] roots objs))
+                (recur sources indexes (conj indexables obj) roots objs))
+              
+              (instance? indexterous.index.index.IndexBase obj)
+              (if (> (count indexables) v-threshold)
+                (do 
+                  (do-insert db (index-collection db) indexes)
+                  (if v (print "i")) 
+                  (recur sources [obj] indexables roots objs))
+                (recur sources (conj indexes obj) indexables roots objs))
+              
+              (instance? indexterous.index.index.Source obj)
+              (recur (conj sources obj) indexes indexables roots objs)
+              
+              (instance? indexterous.index.index.RootEntry obj)
+              (recur sources indexes indexables (conj roots obj) objs)
+              
+              :else 
+              (throw (Exception. (str "-- Unrecognized imported object type: " (class obj))))
+              )
+            (do
+              (if (> (count sources) 0)
+                (do-insert db (source-collection db) sources))
+              (if (> (count roots) 0)
+                (do-insert db (root-collection db) roots))
+              (if (> (count indexes) 0)
+                (do-insert db (index-collection db) indexes))
+              (if (> (count indexables) 0)
               (do-insert db (indexable-collection db) indexables)))
-          )))))
+            )))
+      (.close mongo)
+      (.close rdr))))
 

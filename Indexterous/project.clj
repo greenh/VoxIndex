@@ -16,7 +16,7 @@
       )
 
 
-(defproject indexterous "0.0.0-SNAPSHOT"
+(defproject voxindex/indexterous "0.0.0-SNAPSHOT"
   :description "Indexterous"
   :url "https://github.com/greenh/Indexterous"
   :license {:name "Eclipse Public License - v 1.0"
@@ -28,9 +28,10 @@
   :java-source-paths ["src/java"] 
   :test-paths ["test"]
   :compile-path "classes"
+  :aot [#"indexterous\..*"] 
   :dependencies [
     [org.clojure/clojure "1.5.1"]
-    [hiccup "1.0.3"]
+    [cheshire "5.1.1"] 
     [org.mongodb/mongo-java-driver "2.11.1"] 
     [extensomatic "0.2.0"] 
     ]
@@ -39,6 +40,8 @@
     [lein-clojars "0.9.1"]
     [cjd "0.1.0"]
     ]
+  :omit-source true
+  :jar-exclusions [#"cjd_doc.*"]
   
   :cjd-source "src/clojure"
   :cjd-dest "doc/dark"

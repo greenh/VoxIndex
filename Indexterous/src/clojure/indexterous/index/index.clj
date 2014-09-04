@@ -90,24 +90,25 @@
   (description-of [this] description)
   )
 
-#_ (* Allows an entity to have an identifier that's subject to site-specific 
-      interpretation.
-      @p This gets used, e.g., by voxindex to identify sources that are served 
-      "locally", the URLs of which are generated at the time of service.
-      )
-(defextenso ^:deprecated LocallyIdentified  [] [local-id]
-  (local-identity-of [this] local-id)
-  )
-
-#_ (* Specifies that an entity is "consultable", meaning that it can be accessed 
+#_ (* Specifies that a provider is "consultable", meaning that it can be accessed 
       electronically at some specified URI.)
-(defprotocol Consultable
-  #_ (* Returns a string containing the URI at which the entitiy can notionally 
-        be accessed.)
-  (service-uri-of [this])
+(defprotocol Consultable 
+  #_ (* Returns the provider's URI.
+       @p If the provider happens to be mapped, @name calls the supplied mapping 
+       function to get the actual URI.
+       @(arg map-fn A function that does URI mapping, if needed. It has the form
+          @(fun [provider-key]), where
+          @arg provider-key A key identifying the provider.
+          @returns A string containing the URI for the provider.)
+       @returns The provider's uri.
+       )
+  (uri-of [this map-fn])
+  #_ (* Returns a URI that's extended relative to the provider's URI.
+       )
+  (extended-uri-of [this map-fn relative-uri])
   )
 
-#_ (* Specifies that an entity is "locatable", that it can notionally be 
+#_ (* Specifies that an provider is "locatable", that it can notionally be 
       referenced at some generally non-electronic, physical place, such 
       as a page number in a book, or an aisle in a grocery store.)
 (defprotocol Locatable 
@@ -115,116 +116,101 @@
   (location-of [this])
   )
 
+
 #_ (* Base specification for a @(i source), a coherent body of information such as a 
-      document or collection of documents, the content of which contains refrenceable
-      points of interest described by @(link Indexable indexables). 
+      document or collection of documents, the content of which contains referenceable
+      points of interest described by @(l Indexable indexables).
+      @p A @name includes a map between keys and locators, which are strings that
+      specify the locations of content, and generally take the form of URIs.
+      In general, an indexable identifies its location by specifying its source,
+      a key into the source's locator map, and some additional, locator-relative
+      data (e.g., relative URI path or target, or page number).
+      @p The approach taken here is to not define specific meanings to locator
+      values, but rather to leave that up to site- or implementation-specific
+      issue. To that end, several of the methods below envision the use of a 
+      mapping function to handle, e.g., URI generation.
+      
+      @field source-map A map of keys to locator strings.
       )
-(defextenso Source [(Persistable (_id (Oid/oid))) Named Described Versioned] []
+(defextenso Source [(Persistable (_id (Oid/oid))) Named Described Versioned] 
+  [locator-map]
+  (locator-map-of [this] locator-map)
+  (raw-locator-at [this key] (get locator-map key))
+  (locator-at [this key] (get locator-map key))
   )
-
-#_ (* Refined specification for @(link Source sources) that are "consultable" in the 
-      sense that they are online-accessible at some URI.
-      @field service-uri A URI for the source. By convention, this is a URL for
-      globally accessible sources, or a URN for locally served sources.
-      @filed local-id An id that can be mapped into a locally-served version of the 
-      source.
-      )
-(defextenso ConsultableSource  
-  [(Source name description version) (LocallyIdentified local-id)] 
-  [service-uri]
-  #_ (* Returns true if the source is locally served from an exogeneously specified
-        location. Instead of a URL, the source is spec'ed as having a URN that's
-        used as a locally mapped key by the server.
-        )
-  (locally-served? [this] (boolean (re-matches #"urn:.*" service-uri)))
-  Consultable 
-  (service-uri-of [this] service-uri)
-  )
-
-#_ (* Refined specification for @(link Source sources) that are "locatable" in the
-      sense that they can be located by offline means. This provides the basis for 
-      describing physical resources what contain indexables of interest, such 
-      as books, grocery stores, storage facilities, and the like.
-      )
-(defextenso LocatableSource [(Source name description version)] [location]
-  Locatable
-  (location-of [this] location)  
-  )
-
-;(def source-map* (ref { }))
-
-;(defn get-source-by-ref [source-ref] (get @source-map* source-ref))
-;(defn add-source [source] (dosync (alter source-map* assoc (id-of source) source)))
 
 #_ (* Specifies that an entity (such as an indexable) is contained within or is
       part of a source.
       @field source-ref A reference to the source.
+      @field locator-key A key to a locator as defined by the source's locator map.
       )
-(defextenso Sourced [] [source-ref]
+(defextenso Sourced [] [source-ref locator-key]
   (source-ref-of [this] source-ref)
-  ; (source-of [this] (get-source-by-ref source-ref))
+  (locator-key-of [this] locator-key)
   )
 
-#_ (* An extenso for specifying indexables that have a @(link ConsultableSource).
-      @p @(b Note that, despite its name, the URI contained in @(field relative-uri) 
-          :br @(u MAY) be relative to that of the source but is @(u NOT) required 
-          to be so!) If the full URI (e.g., a URI starting with, e.g., "http://")  
+#_ (* Extenso for describing artifacts that are part of a source, but (like indexes)
+     are not specific to a particular locator.
+     )
+(defextenso SourcedIn [(Sourced source-ref (locator-key nil))] []) 
+
+#_ (* An extenso for specifying indexables that are consultable, i.e.,
+     are online-accessible.
+      @p Note that there's an implicit (but unchecked) requirement that the
+      locator denoted by the source and locator index is of appropriate form,
+      and woe betide if it ain't.
+     @(field relative-uri A string containing the source-locator-relative URI.  
+       @p @(b Note that, despite its name, the URI contained in @(field relative-uri) 
+             :br @(u MAY) be relative to that of the source but is @(u NOT) required 
+             to be so!)
+       If the value is an absolute URI 
+       (e.g., a URI starting with, e.g., "http://"), that URI is presumed to be 
+       the complete location of the indexable, and source locator information
+       is ignored.) 
       )
-(defextenso ConsultablySourced [(Sourced source-ref)] [relative-uri]
+(defextenso ConsultablySourced [(Sourced source-ref locator-key)] [relative-uri]
   (relative-uri-of [this] relative-uri)
-  (service-uri-from [this source] 
-    (if (re-matches #"[\w+-.]+:.*" relative-uri)
-      relative-uri   ; ... but it's not "relative" 
-      (str (service-uri-of source) "/" relative-uri )))
-  
+;  #_ (* Returns the URI for the indexable, applying an externally-specified mapping,
+;       if appropriate.
+;       @arg source The @name object's @(l Source) object.
+;       @arg source-map )
+;  (service-uri-from [this source source-map] 
+;    (if (re-matches #"[\w+-.]+:.*" relative-uri)   ;; URI scheme, per RFC 3986!
+;      relative-uri   ; ... it's not "relative" 
+;      (extend-map-uri (locator-at source locator-key) source-map relative-uri)))
   )
 
-(defextenso LocatablySourced [(Sourced source-ref)] [relative-location]
+#_ (* Extenso specifying indexables that are "locatable", having some physical
+     manifestation in the real world. 
+     @p Such an indexable might be a point on a page in a dead-tree book, for example.
+     )
+(defextenso LocatablySourced [(Sourced source-ref locator-key)] [relative-location]
   (relative-location-of [this] relative-location)
   Locatable 
   (location-of [this] [(location-of source) relative-location]) ;; cop-out :-)
   )
 
-#_ (* Extenso for elements (e.g., @(link RootEntry) and @(link Index) objects) that 
-      may make use of multiple sources. 
-      @p This is intended as hint, rather than a committment. Primary use is identifying
-      affected elements, as when a source's content is removed or replaced. 
-      
-      @field source-refs A single reference to a source, or a collection 
-      (notionally a set) of references to source objects.
-      )
-(defextenso MultiSourced [] [source-refs]
-  (source-refs-of [this] source-refs)
-  (source-ref-set [this] (if (coll? source-refs) (set source-refs) #{ source-refs })))
-
-#_ (* Extenso for consultable indexables that have "parent" indexes. 
-      @p This is primarily in support of bottom-up context estabishment, 
-      wherein given an indexable, a set of parent indexes that constitute a 
-      plausible path to the indexable can be derived.
-      @field parents A collection of index ID sequences. Each element 
-      in the collection is either the OID of a single index, or a sequence of 
-      OIDs of nested index contexts. (No, it isn't really a string.)
-      )
+#_ (* Extenso for indexables that have "parent" indexables. 
+     @p This semi-hack is currently used to identify containing relationships between
+     indexables, such as a Java method is has a "parent" ("is contained in")
+     a java class.
+     )
 (defextenso Parented [] [parents]
-  (parent-id-string-of [this] 
-    (apply str 
-      (interpose "," 
-        (map (fn [ids] 
-               (if (coll? ids)
-                 (apply str (interpose ":" ids))
-                 ids))
-             parents))))
-  (parent-ids-of [this] 
-    (let [pids (parent-id-string-of this)] 
-      (if (empty? pids) nil (.split pids ","))))
+    (parent-ids-of [this] parents)
   )
 
-#_(defn string-parent-ids [parent-ids] 
-  (apply str (interpose "," parent-ids)))
+#_ (* Extenso for indexables that denote a subindex.
+     @field subindex-id The OID of the subindex.
+     )
+(defextenso HasSubindex [] [subindex-ref]
+  (subindex-ref-of [this] subindex-ref)
+  (subindex-ref-string [this] (str subindex-ref))
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#_ (* Specifies that an entity is an indexable. Abstractly, indexables are 
+#_ (* Base extenso for an entity that is an indexable. 
+     @p Abstractly, indexables are 
       pretty much anything that can be referenced via an index, which is to
       say, just about anything that's identifable. As this obviously
       gives rise to a rather large diversity of possible kinds of indexable,
@@ -235,14 +221,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#_ (*
+#_ (* An extenso for a specialized form indexable that represents a top-level
+     index. 
      )
 (defextenso RootIndexable [Indexable] [index-ref index-name]
   (root-index-ref-of [this] index-ref)
   (root-index-ref-string-of [this] (.toString index-ref))
   (root-index-name-of [this] index-name))
 
-#_ (* An entry in an incrementally constructed map of terms to @(i indexes). 
+#_ (* An entry in an incrementally constructed map of terms to top-level @(i indexes). 
       
       @p The overall map is used by the VoxIndex control grammar,
       which creates the map from the collection of all known @name objects at startup,
@@ -257,7 +244,7 @@
       )
 (defexin RootEntry  type-uri
   [(Persistable  _id) (Named name) 
-   (Described description) (MultiSourced source-refs)
+   (Described description) (Sourced source-ref locator-key)
    (Versioned version)]
   [indexable-ref terms]
   
@@ -270,16 +257,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; (defexin Entry type-uri [] [source-term indexable-ref terms]
-;   (source-term-of [this] source-term)
-;   (indexable-ref-of [this] indexable-ref)
-;   (terms-of [this] terms)
-;   
-;   java.lang.Object
-;   (toString [this] 
-;     (str "#<Entry " (enquote source-term) " " (.toString indexable-ref) ">"))
-;   )
-
+#_ (* Preferred function for identifiably creating entries.
+     @p See @(l IndexBase) for details.
+     @arg source-term A short readable string describing the entry.
+     @arg indexable The @(l Indexable) object that the entry identifies.
+     @arg terms A sequence of strings that are vocalizable terms.
+     @(returns An entry, a tuple of the form @form [source-term indexable-id terms]).     
+     )
 (defn new-entry [source-term indexable terms]
   [source-term (id-of indexable) (vec terms)])
 
@@ -298,6 +282,10 @@
 (defn new-spec [category prefixes entries]
   [category prefixes (vec entries)])
 
+
+#_ (* Preferred function for generating a collection of specs.
+     @p See @(l IndexBase) for details.
+     )
 (defn new-specs [& cats-prefs-ents]
   (loop [[category prefixes entries & more] cats-prefs-ents
          specs []]
@@ -311,6 +299,15 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#_ ( Identifier for the default grammar handler. 
+     @p See @(il voxindex.vshell.grammar.DefaultGrammar) for details.)
+(def default-handler-model nil)
+
+#_ ( Identifier for the contextual grammar handler. 
+     @p See @(il voxindex.vshell.grammar.ContextualGrammar) for details.)
+(def contextual-handler-model "contextual")
+
+
 #_ (* Defines a base for the construction of various kinds of indexes. 
      
       @p An index, in local usage, is a collection of entries, where 
@@ -321,11 +318,13 @@
      @field handler-model A string that denotes the the grammar handler type
      to be used for the grammar generated by the index.
       
-     @field handler-model A designatator for the class of @(link GrammarEventHandler)
-     to be used for the index.
+     @field handler-model A string used as a designatator for a class of 
+     @(il voxindex.vshell.grammar.GrammarEventHandler)
+     to be used for the index. See @(il voxindex.vshell.grammar.make-grammar)
+     for details.
       
      @(field specs A collection of tuples of the form 
-             @(form [category prefixes entries]), where
+        @(form [category prefixes entries]), where
              @arg category A string that briefly describes the spec's contents
              @arg prefixes A string or collection of strings representing prefixes 
              to be applied to the terms contained in the indexes denoted by
@@ -347,9 +346,7 @@
                    @(arg source-term) of "IEEE" might have vocalized terms
                    of "i e e e" or "i triple e".))
       )
-(defextenso IndexBase 
-  [(Persistable _id) Named Described
-   (MultiSourced source-refs)] 
+(defextenso IndexBase [(Persistable _id) Named Described (SourcedIn source-ref)] 
   [handler-model specs]
   
   (index-id-of [this] (.toString _id))
@@ -358,15 +355,32 @@
   
   ) ;; IndexBase
 
-(defonce default-handler-model nil)
+#_ (* Extenso for indexes that support )
+(defextenso ContextualIndexBase 
+  [(IndexBase _id name description source-ref 
+              (handler-model contextual-handler-model) specs)] 
+  [] 
+  ) ;; ContextualIndexBase
 
+#_ (* Defines a minimal index, using the default grammar handler model.
+     )
 (defexin Index type-uri 
-  [(IndexBase _id name description source-refs 
+  [(IndexBase _id name description source-ref 
               (handler-model default-handler-model) specs)] 
   []
 
   java.lang.Object
   (toString [this] (str "#<Index " _id " " name ">" ))
+  )
+
+#_ (* Defines an index that uses a grammar handler that adds the entries of  
+     subindexes to the recognition context.
+     )
+(defexin ContextualIndex type-uri 
+  [(ContextualIndexBase _id name description source-ref  specs)] []
+
+  java.lang.Object
+  (toString [this] (str "#<ContextualIndex " _id " " name ">" ))
   )
 
 

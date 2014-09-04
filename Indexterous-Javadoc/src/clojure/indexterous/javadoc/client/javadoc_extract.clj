@@ -8,11 +8,13 @@
      
      You must not remove this notice, or any other, from this software.
      )
+#_ (* )
 (ns indexterous.javadoc.client.javadoc-extract
   (:import
     [indexterous.util BBQueue]
     [java.io PrintStream File]
     [indexterous.index Oid]
+    [indexterous.util ArgumentException]
     )
   (:use 
     [extensomatic.extensomatic]
@@ -24,8 +26,9 @@
     [indexterous.index.document]
     [indexterous.exintern.exintern-base]
     [indexterous.exintern.json]
+    [indexterous.util.cli]
     )
-  )
+  (:gen-class))
 
 (def ^:dynamic message-agent (agent nil))
 
@@ -42,8 +45,6 @@
     (println msg)
     (flush)))
 
-(defn error-message [msg] (send-off message-agent write-error msg))
-   
 (defn message-flush [] 
      (let [p (promise)]
        (send-off message-agent (fn [_] (deliver p nil)))
@@ -284,9 +285,9 @@
       @arg content A string containing the content of the parent type's 
       Javadoc document.
       @arg source-ref The @(linki org.bson.types.ObjectId) of the Javadoc tree's source object.
+      @arg locator-key The value that is the key to the source's locator map.
       
-      @(returns 
-         [member-index-id kind-set member-count], where\:
+      @(returns @(form [member-index-id kind-set member-count]), where\:
          @arg member-index-id The OID of an index whose entries are vocalizations 
          of all of the parent type's member's names, referring to the member's indexables.
          @arg kind-set A set indicating the kinds of members the type contains. 
@@ -295,7 +296,7 @@
          constructors, and/or annotation-elements respectively.
          @arg member-count The number of members for the type.)
      )
-(defn member-extractor [type-index-id type-qname type-rel-uri content source-ref ]
+(defn member-extractor [type-index-id type-qname type-rel-uri content source-ref locator-key ]
   (let [member-index-id (Oid/oid)
         parent-iids [type-index-id [member-index-id type-index-id]]
         
@@ -303,7 +304,7 @@
         (map
           (fn [[target name parameters]]
             (do-ix JavadocMethod 
-                   name source-ref (str type-rel-uri "#" target) 
+                   name source-ref locator-key (str type-rel-uri "#" target) 
                    parent-iids type-qname parameters))
           (method-seq content))
         
@@ -311,7 +312,7 @@
         (map
           (fn [[target name parameters]]
             (do-ix JavadocConstructor :t ["constructor"]
-                   name source-ref (str type-rel-uri "#" target) 
+                   name source-ref locator-key (str type-rel-uri "#" target) 
                    parent-iids type-qname parameters))
           (constructor-seq content))
         
@@ -319,21 +320,24 @@
         (map
           (fn [[target]]
             (do-ix JavadocConstant
-                   target source-ref (str type-rel-uri "#" target) parent-iids type-qname))
+                   target source-ref locator-key (str type-rel-uri "#" target) 
+                   parent-iids type-qname))
           (constant-seq content))
           
         field-entries
         (map
           (fn [[target]]
             (do-ix JavadocField
-                   target source-ref (str type-rel-uri "#" target) parent-iids type-qname))
+                   target source-ref locator-key (str type-rel-uri "#" target)
+                   parent-iids type-qname))
           (field-seq content))
           
         annotation-entries
         (map
           (fn [[target name parameters]]
             (do-ix JavadocAnnotationElement
-                   name source-ref (str type-rel-uri "#" target) parent-iids type-qname ))
+                   name source-ref locator-key (str type-rel-uri "#" target) 
+                   parent-iids type-qname ))
           (annotation-seq content))
           
         kind-set (-> #{}
@@ -348,7 +352,7 @@
           (letfn [(ifn [entries+ what target title terms]
                        (if-not (empty? what)
                          (let [entry (do-ix Bookmark :t terms
-                                            source-ref 
+                                            source-ref locator-key
                                             (str type-rel-uri "#" target) 
                                             (str type-qname " | " title)
                                             parent-iids)]
@@ -401,7 +405,7 @@
      
      @(returns @(form [type-entries members]) )
      )
-(defn type-extractor [base-uri source-ref type-index-id types]
+(defn type-extractor [base-uri source-ref locator-key type-index-id types]
   (let [[type-entries members]
         (reduce 
           (fn [[type-entries+ members+] [doc kind package name]]
@@ -410,7 +414,7 @@
                   content (slurp (str base-uri "/" doc))
                   
                   [member-index-id member-kind-set member-count]
-                  (member-extractor type-index-id type-qname doc content source-ref )
+                  (member-extractor type-index-id type-qname doc content source-ref locator-key )
                   
                   members-ref member-index-id
                   type-iid (if member-index-id 
@@ -429,20 +433,20 @@
                   (condp = kind
                     "class" 
                     (do-ix JavadocClass :t terms
-                           name source-ref doc type-iid package 
-                           member-kind-set members-ref)
+                           name source-ref locator-key doc type-iid members-ref package 
+                           member-kind-set )
                     "interface" 
                     (do-ix JavadocInterface :t terms
-                           name source-ref doc type-iid package 
-                           member-kind-set members-ref)
+                           name source-ref locator-key doc type-iid members-ref package 
+                           member-kind-set)
                     "annotation" 
                     (do-ix JavadocAnnotation :t terms
-                           name source-ref doc type-iid package 
-                           member-kind-set members-ref)
+                           name source-ref locator-key doc type-iid members-ref package 
+                           member-kind-set)
                     "enum"
                     (do-ix JavadocEnum :t terms
-                           name source-ref doc type-iid package 
-                           member-kind-set members-ref)
+                           name source-ref locator-key doc type-iid members-ref package 
+                           member-kind-set)
                     
                     (message (str "Unrecognized type kind: " kind 
                                   " in " (str package "." name)) ))
@@ -486,6 +490,7 @@
   (source-id-of [this] (id-of source)) 
   (source-name-of [this] (name-of source))
   (source-desc-of [this] (description-of source))
+  (locator-of [this] "0")
   (type-index-id-of [this] type-index-id) 
   (package-index-id-of [this] package-index-id)
   (base-uri-of [this] base-uri)
@@ -548,7 +553,7 @@
         @(returns True, if the job completed OK.) )
   (results [this] @result*)
   #_(result-source [this] source)
-  )
+  )   ;; JavadocJob
 
 
 #_ (* Extracts index-related information from Javadoc on a sequence of package 
@@ -572,6 +577,7 @@
   (try
     (let [base-uri (base-uri-of job)
           source-ref (source-id-of job)
+          locator-key (locator-of job)
           type-index-id (type-index-id-of job)
           type-iid (str type-index-id)
           [p-msg t-msg m-msg] (message-fns job)] 
@@ -588,7 +594,7 @@
                                        (count indexes)]))
                   
                   [type-entries  member-count]
-                  (type-extractor base-uri source-ref type-index-id pkg-goop)
+                  (type-extractor base-uri source-ref locator-key type-index-id pkg-goop)
                    
                   package-index-id (Oid/oid) 
                   _ (zap (new-Index 
@@ -596,7 +602,7 @@
                            source-ref (new-specs nil nil type-entries)))
                   
                   package-entry
-                  (do-ix JavadocPackage pkg-name source-ref type-iid package-index-id)
+                  (do-ix JavadocPackage pkg-name source-ref locator-key type-iid package-index-id)
                   ]
               (package-msg (format "%d: package %s complete %d types %d members" 
                                    id pkg-name (count type-entries) member-count))
@@ -635,7 +641,7 @@
                  (conj pkg-entries+ pkg-entry)])
               [[] []] 
               (completed-pkg-seq))]
-        (zap (new-JavadocTypeIndex
+        (zap (new-ContextualIndex ;new-JavadocTypeIndex
                (type-index-id-of job)
                (str (source-name-of job) "-types") 
                (str (source-desc-of job) " Types")
@@ -645,15 +651,15 @@
                  "Packages" ["package"] pkg-entries
                  "Convenience" [(do-ix Bookmark 
                                        :t ["index of classes" "class index"]
-                                       (source-id-of job) 
+                                       (source-id-of job) (locator-of job) 
                                        "allclasses-noframe.html" "Class Index" 
                                        (type-index-id-of job)) 
                                 (do-ix Bookmark 
                                        :t ["index of packages" "package index"]
-                                       (source-id-of job) 
+                                       (source-id-of job) (locator-of job) 
                                        "overview-summary.html" "Package Index" 
                                        (type-index-id-of job))])))
-        (zap (new-JavadocPackageIndex
+        (zap (new-ContextualIndex ; new-JavadocPackageIndex
                (package-index-id-of job) 
                (str (source-name-of job) "-packages")
                (str (source-desc-of job) " Packages")
@@ -664,8 +670,11 @@
     (catch Exception e 
       (binding [*out* *err*] (printf "X: Exception -- %s\n" (.getMessage e)))
       (.printStackTrace e)
-      (job-complete job false))))
+      (job-complete job false)))
+  ) ;; reduction-process
 
+(def local-urn-start "urn:local:")
+(defn local-source [id] (str local-urn-start id))
 
 #_ (* Processes a javadoc tree, extracting index information as it goes. @name can
       operate in a single-threaded mode (useful for debugging), or multithreaded.
@@ -673,16 +682,16 @@
       @returns A @(link JavadocJob) object describing the extraction job, and containing
       its results.
      )
-(defnk javadoc-process [name description version base-uri remote-uri 
+(defnk javadoc-process [name description version source-uri service-uri 
                         :threads 0 :members true :vm false :vt false :vp false ]
-  (let [source (zap (new-JavadocSource name description version name remote-uri))
+  (let [source (zap (new-JavadocSource name description version { "0" service-uri }))
         job (make-JavadocJob 
-              base-uri source 
+              source-uri source 
               (if (= threads 0) 1 threads) members
               [(if (or vp vm vt) message (fn [_]))
                (if (or vt vm) message (fn [_]))
                (if (or vm) message (fn [_]))])]
-    (message (str "Starting " name " at " base-uri))
+    (message (str "Starting " name " at " source-uri))
     (if (zero? threads)
       (do
         (javadoc-package-process 0 job )
@@ -738,7 +747,7 @@
      )
 (defn javadoc-extract [dest name description version 
                         pkg-terms type-terms base-uri remote-uri 
-                        { :keys [threads members vm vt vp] } ]
+                        { :keys [threads members vm vt vp packages] } ]
   (let [out-stream (PrintStream. (File. dest))] 
     (binding [output-fn (fn [_ stuff] (.println out-stream stuff))
               externalizer (make-JSONExternalizer)]
@@ -747,17 +756,21 @@
             package-root 
             (new-JavadocRoot 
                (package-index-id-of job) (str name "-packages")
-               (source-id-of job) (str description " packages"))
+               (source-id-of job) (locator-of job) 
+               (str description " packages"))
             type-root 
             (new-JavadocRoot 
-               (type-index-id-of job) name (source-id-of job) description)]
-        (zap package-root)
-        (zap (new-RootEntry
-               (Oid/oid) (str name "-packages") (str description " packages") 
-               (source-id-of job) version (id-of package-root) pkg-terms))
+               (type-index-id-of job) name (source-id-of job) 
+               (locator-of job) description)]
+        (if packages
+          (zap package-root)
+          (zap (new-RootEntry
+                 (Oid/oid) (str name "-packages") (str description " packages") 
+                 (source-id-of job) (locator-of job)
+                 version (id-of package-root) pkg-terms)))
         (zap type-root)
         (zap (new-RootEntry
-               (Oid/oid) name description (source-id-of job) version 
+               (Oid/oid) name description (source-id-of job) (locator-of job) version 
                (id-of type-root) type-terms))
         (output-flush)
         (.close out-stream)))))
@@ -768,115 +781,96 @@
   (javadoc-extract dest name description version pkg-terms type-terms base-uri remote-uri 
                    { :threads threads :members members :vm vm :vt vt :vp vp}))
 
-#_(defn -main [& args]
-  (let [[opts remaining] 
-        (loop [[arg & remains+ :as remaining+] args
-               opts+ { }]  ; <-- default options go here
-          (let [[param & remains*] remains+
-                [_ opt] (if arg (re-matches #"--(.*)" arg))
-                [_ xopt attached] (if arg (re-matches #"-(\p{Alpha})(.*)" arg))]
-            (cond 
-              opt  ; multicharacter option, ala --title
-              (condp = opt
-               "all" (recur remains+ (assoc opts+ :all true))
-                
-                "add-css"
-                (if param
-                  (let [csss (vec (.split param ";"))]
-                    (recur remains* (assoc opts+ :add-css csss)))
-                  (throw (CJDException. "Missing parameter for --add-css")))
-              
-                "use-css"
-                (if param
-                  (let [csss (vec (.split param ";"))]
-                    (recur remains* (assoc opts+ :use-css csss)))
-                  (throw (CJDException. "Missing parameter for --use-css")))
-              
-                "docstrings" (recur remains+ (assoc opts+ :docstrings true))
-                
-                "exclude"
-                (if param
-                  (let [reqs (vec (.split param ";"))]
-                    (recur remains* (assoc opts+ :exclude reqs)))
-                  (throw (CJDException. "Missing parameter for --exclude")))
-                
-                "help" 
-                (do
-                  (cjd-help)
-                  (System/exit 0))
-              
-                 "index"
-                (if param
-                  (recur remains* (assoc opts+ :index param))
-                  (throw (CJDException. "Missing parameter for --index")))
-                
-                "nogen" (recur remains+ (assoc opts+ :nogen true))
-                
-                "noindex" (recur remains+ (assoc opts+ :no-index true))
-                
-                "overview"
-                (if param
-                  (recur remains* (assoc opts+ :overview param))
-                  (throw (CJDException. "Missing parameter for --overview")))
-                
-                "requires"
-                (if param
-                  (let [reqs (vec (.split param ";"))]
-                    (recur remains* (assoc opts+ :requires reqs)))
-                  (throw (CJDException. "Missing parameter for --require")))
-                
-                "showopts" (recur remains+ (assoc opts+ :showopts true))
-                
-                "theme"
-                (if param
-                  (recur remains* (assoc opts+ :theme (keyword param)))
-                  (throw (CJDException. "Missing parameter for --theme")))
-                
-                "throw" (recur remains+ (assoc opts+ :throw-on-warn true))
-                
-                "title" 
-                (if param
-                  (recur remains* (assoc opts+ :title param))
-                  (throw (CJDException. "Missing parameter for --title")))
-                
-                "version"
-                (do 
-                  (println *cjd-version*)
-                  (System/exit 0))
-                
-                "v"
-                (let [vopts param #_(if attached attached param)
-                      remains** remains* #_(if attached remaining+ remains*)]
-                  (if (empty? vopts)
-                    (throw (CJDException. "Missing parameter for -v"))
-                    (recur remains** 
-                           (assoc opts+ :v (set (map (fn [ch] (keyword (str ch))) vopts))))))
-                 
-                ; :else
-                (throw (CJDException. (str "Unrecognized option: " opt))))
-              
-              #_xopt  ; single-character option, ala -v
-              #_(condp = xopt
-                "v"
-                (let [vopts (if attached attached param)
-                      remains** (if attached remaining+ remains*)]
-                  (if (empty? vopts)
-                    (throw (CJDException. "Missing parameter for -v"))
-                    (recur remains** 
-                           (assoc opts+ :v (set (map (fn [ch] (keyword (str ch))) vopts))))))
-                
-                ; :else
-                (throw (CJDException. (str "Unrecognized option: " opt))))
-              
-              :else 
-            [opts+ remaining+])))  ; <<--- EXIT
-        
-        [out-dir & files] remaining]
-    #_(if-not out-dir 
-      (throw (CJDException. "Missing output directory / input files")))
-    #_(if (empty? files) 
-      (throw (CJDException. "Missing input files")))
-    (if (and out-dir  (not-empty files))
-      (cjd-generator (vec files) out-dir opts)
-      (cjd-help))))
+(declare show-help)
+(declare show-version)
+
+(defopts optmap
+  (fnil-opt help (fn [_] (show-help) (System/exit 0))
+    "Displays this help information and exits.")
+  (fnil-opt version (fn [_] (show-version) (System/exit 0))
+    "Displays the program version and then exits.")
+  (fn-opt term phrase (fn [opts param] (assoc opts :terms (conj (get opts :terms) param)))
+    "Specifies a vocal phrase used to identify the Javadoc index. This option may
+be specified more than to specify multiple phrases.")
+;  (uri-opt remote remote-uri 
+;    "Specifies the base URI of the document tree from which the tree's content
+;will be served. By default, this is the same as the URI specified for the
+;<source> argument. 
+;Note that this and the --local option are mutually exclusive. ")
+;  (string-opt local local-id
+;    "Specifies a name used by the server to identify locally served content.
+;Note that this and the --remote option are mutually exclusive.")
+  (uri-opt service-uri uri
+    "Specifies a URI for the server to be used for delivering content referenced
+by entries in the index. Defaults to the source URI. Can be set to 'urn:local:<id>'
+for content being served locally by the VoxIndex server, where <id> identifies
+the content tree to the server.")
+  (int-opt threads thread-count
+    "Specifies the number of concurrent threads that the exraction
+process should use.")
+  (nil-opt packages 
+    "Causes an explicit package index to be generated.")
+  (nil-opt nomembers 
+    "Causes only types and packages to be indexed, not members.")
+  (nil-opt vp 
+    "Prints a message for each package encountered.")
+  (nil-opt vt 
+    "Voluminously prints a message for each type encountered. Implies --vp.")
+  (nil-opt vm 
+    "Very voluminously prints a message for each member encountered. Implies --vt and --vp.")
+  )
+
+
+(defargs arglist
+  (string-arg name
+    "Specifies a short name for index, e.g. 'java-1.7'.")
+  (string-arg desc
+    "Specifies a description for the index, e.g. 'Java API 1.7 update 17'.")
+  (string-arg version 
+    "Specifies a version for the index, e.g. '1.7.17'.")
+  (string-arg source 
+    "Specifies the base URI or directory name for the Javadoc tree to process.")
+  (string-arg dest 
+    "Specifies the destination file name for generated content.")
+  )
+
+(defn show-help []
+  (let [optdoc (opt-doc #'optmap)
+        argdoc (arg-doc)]
+    
+    
+    )
+  )
+
+(defn use-error [msg] 
+  (binding [*out* *err*] 
+    (println (str "Use: " msg))) 
+  #_(System/exit 1))
+
+(defn show-version []
+  (println "0.0.0"))
+
+(defn -main [& args]
+  (try
+    (let [[{:keys [name description version source dest 
+                   terms nomembers threads service-uri] :as opts} 
+           remaining] 
+          (process-cli-args arglist optmap {} args)]
+      (prn opts)
+      (cond
+        (> (count remaining) 0) 
+        (use-error "Extra arguments")
+      
+        (zero? (count terms)) 
+        (use-error "Must specify at least one term with --term")
+      
+        :else
+        (prn ['javadoc-extract dest name description version 
+              (map (fn [t] (str t " packages")) terms)
+              terms
+              source 
+             (if service-uri service-uri source) opts])))
+    (catch ArgumentException e
+      (use-error (.getMessage e))))
+  )  ;; -main
 
