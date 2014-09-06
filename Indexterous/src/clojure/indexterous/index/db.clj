@@ -204,37 +204,49 @@
 
 (defn to-oids [oids] (map #(ObjectId. %) oids))
 
-(defn remove-source [db source-name]
-  (if-let [src (fetch-one db (source-collection db) { "name" source-name})]
-    (let [source-ref (id-of src)]
-      (remove-from db (source-collection db) { "_id" source-ref})
-      (remove-from db (indexable-collection db) { "source-ref" source-ref })
-      (remove-from db (index-collection db) { "source-refs" source-ref })
-      (remove-from db (root-collection db) { "source-refs" source-ref }))
-    (println "No source: " source-name)))
+(defn remove-source [dbname source-name]
+  (with-open [mongo (Mongo.)]
+    (let [db (new-DB mongo dbname)]
+      (if-let [src (fetch-one db (source-collection db) { "name" source-name})]
+        (let [source-ref (id-of src)]
+          (remove-from db (source-collection db) { "_id" source-ref})
+          (remove-from db (indexable-collection db) { "source-ref" source-ref })
+          (remove-from db (index-collection db) { "source-refs" source-ref })
+          (remove-from db (root-collection db) { "source-refs" source-ref }))
+      (println "No source: " source-name)))
+    (.close mongo)))
 
-(defn count-source [db name]
-  (if-let [src (fetch-one db (source-collection db) { "name" name})]
-    [(count-of db (source-collection db) { "name" name})
-     (count-of db (root-collection db) { "source-refs" (id-of src) })
-     (count-of db (index-collection db) { "source-refs" (id-of src) })
-     (count-of db (indexable-collection db) { "source-ref" (id-of src) })]))
+(defn count-source [dbname name]
+  (with-open [mongo (Mongo.)]
+    (let [db (new-DB mongo dbname)] 
+      (if-let [src (fetch-one db (source-collection db) { "name" name})]
+        [(count-of db (source-collection db) { "name" name})
+         (count-of db (root-collection db) { "source-refs" (id-of src) })
+         (count-of db (index-collection db) { "source-refs" (id-of src) })
+         (count-of db (indexable-collection db) { "source-ref" (id-of src) })]))
+    (.close mongo)))
 
-(defn show-roots [db]
-  (let [roots (fetch-all db (root-collection db))]
-    (doseq [root roots]
-      (println (description-of root) (id-of root) (vec (map enquote (root-terms-of root))) 
-               (str (locator-key-of root) " in " (source-ref-of root)) 
-               (str (root-indexable-ref-of root)))) ))
+(defn show-roots [dbname]
+  (with-open [mongo (Mongo.)]
+    (let [db (new-DB mongo dbname)
+          roots (fetch-all db (root-collection db))]
+     (doseq [root roots]
+       (println (description-of root) (id-of root) (vec (map enquote (root-terms-of root))) 
+                (str (locator-key-of root) " in " (source-ref-of root)) 
+                (str (root-indexable-ref-of root)))))
+    (.close mongo)))
 
-(defn show-sources [db]
-  (let [sources (fetch-all db (source-collection db))]
-    (doseq [source sources]
-      (println (description-of source) (name-of source) (id-of source) 
-        (apply str 
-          (interpose " " 
-            (map (fn [[key locator]] (str key ": " locator))
-              (locator-map-of source))))))))
+(defn show-sources [dbname]
+  (with-open [mongo (Mongo.)]
+    (let [db (new-DB mongo dbname)
+          sources (fetch-all db (source-collection db))]
+     (doseq [source sources]
+       (println (description-of source) (name-of source) (id-of source) 
+         (apply str 
+           (interpose " " 
+             (map (fn [[key locator]] (str key ": " locator))
+               (locator-map-of source)))))))
+    (.close mongo)))
 
 
 
