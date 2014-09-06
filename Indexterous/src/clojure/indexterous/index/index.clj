@@ -286,12 +286,21 @@
 #_ (* Preferred function for generating a collection of specs.
      @p See @(l IndexBase) for details.
      )
-(defn new-specs [& cats-prefs-ents]
-  (loop [[category prefixes entries & more] cats-prefs-ents
-         specs []]
-    (if entries
-      (recur more (conj specs [category prefixes (vec entries)]))
-      specs)))
+(defmacro new-specs [& cats-prefs-ents]
+  (if (= (mod (count cats-prefs-ents) 3) 0)
+    (let [spex (map (fn [spec] `[~@spec]) (partition 3 cats-prefs-ents))]
+       `[~@spex])
+    (throw (Exception. "Incorrect number of parameters for new-specs")))
+  ) 
+
+#_(defn new-specs [& cats-prefs-ents]
+  (if (= (mod (count cats-prefs-ents) 3) 0)
+     (loop [[category prefixes entries & more] cats-prefs-ents
+           specs []]
+      (if category
+        (recur more (conj specs [category prefixes (vec entries)]))
+        specs))
+     (throw (Exception. "Incorrect number of parameters for new-specs"))))
 
 (defn spec-category-of [[category _ _]] category)
 (defn spec-prefixes-of [[_ prefixes _]] prefixes)

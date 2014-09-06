@@ -649,22 +649,22 @@
                (new-specs
                  "Classes" ["" "class" "enum" "interface" "type" "annotation"] type-entries
                  "Packages" ["package"] pkg-entries
-                 "Convenience" [(do-ix Bookmark 
-                                       :t ["index of classes" "class index"]
-                                       (source-id-of job) (locator-of job) 
+                 "Convenience" nil [(do-ix Bookmark 
+                                           :t ["index of classes" "class index"]
+                                           (source-id-of job) (locator-of job) 
                                        "allclasses-noframe.html" "Class Index" 
-                                       (type-index-id-of job)) 
-                                (do-ix Bookmark 
+                                           (type-index-id-of job)) 
+                                    (do-ix Bookmark 
                                        :t ["index of packages" "package index"]
-                                       (source-id-of job) (locator-of job) 
+                                           (source-id-of job) (locator-of job) 
                                        "overview-summary.html" "Package Index" 
-                                       (type-index-id-of job))])))
+                                           (type-index-id-of job))])))
         (zap (new-ContextualIndex ; new-JavadocPackageIndex
                (package-index-id-of job) 
                (str (source-name-of job) "-packages")
                (str (source-desc-of job) " Packages")
                (source-id-of job) 
-               (new-specs ["Packages" nil pkg-entries])))
+               (new-specs "Packages" nil pkg-entries)))
         (job-complete job true)
         (message "X: complete")))
     (catch Exception e 
