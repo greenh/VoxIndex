@@ -64,11 +64,11 @@
   (toString [this] (str "#<Bookmark " title " #" (id-string-of this) ">" ))
 )
 
-(defn bookmark-entry [source-ref locator-key parent-id entry]
-  (if-not (and (vector? entry) (= 3 (count entry)))
+(defn bookmark-entry [source-ref parent-id entry]
+  (if-not (and (vector? entry) (= 4 (count entry)))
     (throw (Exception. (str "Deformed entry: " (enquote entry)) )))
-  (let [[terms source-term rel-uri] entry
-        indexable (new-Bookmark source-ref locator-key rel-uri source-term parent-id)
+  (let [[terms source-term locator rel-uri] entry
+        indexable (new-Bookmark source-ref (str locator) rel-uri source-term parent-id)
         index-entry (new-entry source-term indexable terms)]
     [index-entry indexable]))
 
