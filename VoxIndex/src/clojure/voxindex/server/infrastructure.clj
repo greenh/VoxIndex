@@ -14,11 +14,14 @@
 (ns voxindex.server.infrastructure
   (:use
     [extensomatic.extensomatic]
+    [voxindex.server.vox-log]
     )
   (:import 
     [org.joda.time DateTime]
     [org.mindrot.jbcrypt BCrypt])
   )
+
+(def ^{:private true} log-id "VoxIndex.Infrastructure")
 
 (def expiration-msec (* 1000 60 60 24 7))  ;; a week, for now
 
@@ -117,6 +120,15 @@
   (dosync
     (alter sessions* dissoc session-id))
   nil)
+
+(defn clear-sessions []
+  (let [active 
+        (dosync
+          (let [active @sessions*]
+            (ref-set sessions* {})
+            active))]
+    (doseq [[session-id session] active]
+      (println "Snuffing old session" session-id))))
 
 
 

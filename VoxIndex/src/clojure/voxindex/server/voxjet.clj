@@ -29,9 +29,12 @@
      ServletHolder ServletContextHandler ServletHandler DefaultServlet]
     [org.eclipse.jetty.server.nio SelectChannelConnector]
     [org.eclipse.jetty.server.ssl SslSelectChannelConnector]
+    [org.eclipse.jetty.util.component AbstractLifeCycle$AbstractLifeCycleListener]
     [org.eclipse.jetty.util.ssl SslContextFactory]
     [org.eclipse.jetty.util.thread QueuedThreadPool]
     )
+  (:require 
+    [voxindex.server.infrastructure :as infrastructure])
   )
 
 (def ^{:private true} log-id "VoxJet")
@@ -115,6 +118,9 @@
        (.setSendServerVersion true)
        (.setSendDateHeader true)
        (.setGracefulShutdown 1000)
+       (.addLifeCycleListener
+         (proxy [AbstractLifeCycle$AbstractLifeCycleListener] []
+          (lifeCycleStopping [event] (infrastructure/clear-sessions))))
        )
      ]
     (.addHandler contexts srv-con-handler)

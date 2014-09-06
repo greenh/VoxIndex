@@ -59,18 +59,18 @@
 (defproxy VoxIndexListener ServletContextListener [] [] 
   (contextInitialized [event]
       (try
-        (log-info listener-id "Initializing")
-        (let [context (.getServletContext event)]
-          (let [mongo (Mongo.)]
-            (.setAttribute context params/db-connection mongo)
-            ))
+        (let [context (.getServletContext event)
+              mongo (Mongo.)]
+          (log-info listener-id "Initializing, using " 
+            (System/identityHashCode mongo) " " (.getDatabaseNames mongo))
+          (.setAttribute context params/db-connection mongo))
         (catch Throwable t
           (log-error listener-id t "Exception during initialization: ")(.getMessage t))))
     
     (contextDestroyed [event] 
       (let [context (.getServletContext event)
             mongo (.getAttribute context params/db-connection)] 
-        (log-info listener-id "Shutting down")
+        (log-info listener-id "Shutting down " (System/identityHashCode mongo))
         (if mongo (.close mongo)))))
 
 (def ^{:private true} log-id "VoxIndexServlet")
@@ -264,7 +264,8 @@
 	                ]
 	            (activate-session session)
 	            (log-info log-id 
-	                    (str "Opening DB " db-name " in server " (mongo-identity mongo) "\n"))
+	                    (str "Opening DB " db-name " in server " (mongo-identity mongo) 
+                       " using " (System/identityHashCode mongo)  "\n"))
 	            (open-db db)
 	            (start recognizer)
 	            (log-info log-id "Login OK " userid " session " (session-id-of session)
