@@ -211,8 +211,8 @@
         (let [source-ref (id-of src)]
           (remove-from db (source-collection db) { "_id" source-ref})
           (remove-from db (indexable-collection db) { "source-ref" source-ref })
-          (remove-from db (index-collection db) { "source-refs" source-ref })
-          (remove-from db (root-collection db) { "source-refs" source-ref }))
+          (remove-from db (index-collection db) { "source-ref" source-ref })
+          (remove-from db (root-collection db) { "source-ref" source-ref }))
       (println "No source: " source-name)))
     (.close mongo)))
 
@@ -221,8 +221,8 @@
     (let [db (new-DB mongo dbname)] 
       (if-let [src (fetch-one db (source-collection db) { "name" name})]
         [(count-of db (source-collection db) { "name" name})
-         (count-of db (root-collection db) { "source-refs" (id-of src) })
-         (count-of db (index-collection db) { "source-refs" (id-of src) })
+         (count-of db (root-collection db) { "source-ref" (id-of src) })
+         (count-of db (index-collection db) { "source-ref" (id-of src) })
          (count-of db (indexable-collection db) { "source-ref" (id-of src) })]))
     (.close mongo)))
 
